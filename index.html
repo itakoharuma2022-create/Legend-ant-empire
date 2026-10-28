@@ -668,7 +668,7 @@ function draw() {
   ctx.fillStyle = 'rgba(0,0,0,.2)';
   for (let ix = Math.floor(left / 60); ix <= Math.floor(right / 60); ix++) for (let iy = Math.floor(Math.max(tp, GROUND) / 60); iy <= Math.floor(bt / 60); iy++) {
     const h = hash(ix, iy); if (h % 3) continue;
-    ctx.beginPath(); ctx.arc(ix * 60 + h % 50, iy * 60 + (h >> 8) % 50, 2 + (h >> 16) % 4, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(ix * 60 + h % 50, iy * 60 + (h >>> 8) % 50, 2 + (h >>> 16) % 4, 0, 6.283); ctx.fill();
   }
   // 木・岩(奥)
   for (let ix = Math.floor(left / 110); ix <= Math.floor(right / 110); ix++) {
@@ -763,10 +763,15 @@ initNest();
 }
 let last = performance.now(), uiAcc = 0;
 function frame(now) {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now;
-  update(dt); draw();
-  uiAcc += dt; if (uiAcc > 0.1) { uiAcc = 0; updateUI(); }
   requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  try {
+    update(dt); draw();
+    uiAcc += dt; if (uiAcc > 0.1) { uiAcc = 0; updateUI(); }
+  } catch (e) {
+    console.error(e);
+    if (!frame.err) { frame.err = 1; notify('⚠️ エラー: ' + e.message); }
+  }
 }
 updateUI();
 requestAnimationFrame(frame);
