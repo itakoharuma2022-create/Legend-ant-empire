@@ -92,10 +92,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div class="bar"><i id="pop-bar" style="width:0;background:linear-gradient(90deg,var(--grn),var(--acc))"></i></div>
       </div>
       <div class="card">
-        <h3>女王への方針 (産み分けの比率)</h3>
-        <div class="cs"><div class="row"><span>⛏️ 採掘アリ <b id="c-miner">0</b></span><span id="p-miner">30%</span></div><input type="range" id="s-miner" min="0" max="100" value="30"></div>
-        <div class="cs"><div class="row"><span>🍃 採集アリ <b id="c-forager">0</b></span><span id="p-forager">55%</span></div><input type="range" id="s-forager" min="0" max="100" value="55"></div>
-        <div class="cs" style="margin-bottom:0"><div class="row"><span>⚔️ 兵隊アリ <b id="c-soldier">0</b></span><span id="p-soldier">15%</span></div><input type="range" id="s-soldier" min="0" max="100" value="15"></div>
+        <h3>次に育てるアリを選ぶ</h3>
+        <p style="font-size:11px;color:var(--sub);margin:-4px 0 12px">最初の採集アリが餌を巣に運んだら、好きな種類の「羽化」ボタンをタップ！</p>
+        <div class="up" style="margin-bottom:10px"><div class="ic">⛏️</div><div class="tx"><b>採掘アリ <span id="c-miner">0</span>匹</b><small>巣を掘って部屋を広げる ・ 産卵待ち <span id="q-miner">0</span></small></div><button class="btn" id="btn-lay-miner" aria-label="採掘アリを羽化させる">羽化 🍃<span id="cost-miner">6</span></button></div>
+        <div class="up" style="margin-bottom:10px"><div class="ic">🍃</div><div class="tx"><b>採集アリ <span id="c-forager">0</span>匹</b><small>地上から餌を運ぶ ・ 産卵待ち <span id="q-forager">0</span></small></div><button class="btn" id="btn-lay-forager" aria-label="採集アリを羽化させる">羽化 🍃<span id="cost-forager">6</span></button></div>
+        <div class="up"><div class="ic">⚔️</div><div class="tx"><b>兵隊アリ <span id="c-soldier">0</span>匹</b><small>外敵・他コロニーと戦う ・ 産卵待ち <span id="q-soldier">0</span></small></div><button class="btn" id="btn-lay-soldier" aria-label="兵隊アリを羽化させる">羽化 🍃<span id="cost-soldier">10</span></button></div>
+        <div id="lay-hint" style="font-size:11px;color:var(--sub);margin-top:10px"></div>
       </div>
       <div class="card">
         <h3>状況</h3>
@@ -135,7 +137,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 // ==========================================
 // 定数・状態
 // ==========================================
-const GROUND = -200, SURF = GROUND - 3, WORLD = 1500, DAY = 120, EGG_COST = 6, RESERVE = 10;
+const GROUND = -200, SURF = GROUND - 3, WORLD = 1500, DAY = 120, EGG_COST = { miner: 6, forager: 6, soldier: 10 };
 const SEASONS = [
   { n: '春', c: '#7cb342', leaf: '#8bc34a', sp: 1,    sv: 1 },
   { n: '夏', c: '#2e7d32', leaf: '#2f7d32', sp: 1.15, sv: 0.8 },
@@ -157,10 +159,10 @@ const NODE_TYPES = {
 const BODY = { miner: '#6fb4f0', forager: '#8bc96b', soldier: '#e8675d', queen: '#ffb74d', rival: '#b36bd6' };
 
 const state = {
-  food: 30, nestSize: 200, miners: 0, foragers: 0, soldiers: 0,
+  food: 5, nestSize: 200, miners: 0, foragers: 0, soldiers: 0,
   clawLevel: 1, mandLevel: 1, antLevel: 1, minerMult: 1, dmgMult: 1,
   costs: { claw: 300, mand: 200, ant: 150 },
-  target: { miner: 30, forager: 55, soldier: 15 },
+  orders: { miner: 0, forager: 0, soldier: 0 },
   layT: 0, digCount: 0, mound: 0, inBattle: false, enemyIndex: 0
 };
 const env = { raining: false, rainLeft: 0, nextRain: 80, collapseT: 0, nextFood: 3, nextRival: 170, rivalWave: false, rivalKills: 0 };
@@ -274,13 +276,13 @@ function spawnRivals() {
   env.rivalWave = true; env.rivalKills = 0;
   notify('⚠️ 他コロニーのアリが餌を奪いに来た！');
 }
-// 女王の産卵: 食料・収容力・方針比率に従う
-function layEgg() {
-  const cnt = { miner: 0, forager: 0, soldier: 0 }; ants.forEach(a => cnt[a.type]++);
-  const sum = state.target.miner + state.target.forager + state.target.soldier || 1, tot = ants.length || 1;
-  let best = 'forager', bd = -9;
-  for (const k of ['miner', 'forager', 'soldier']) { const d = state.target[k] / sum - cnt[k] / tot; if (d > bd) { bd = d; best = k; } }
-  state.food -= EGG_COST; ants.push(new Ant(best, nestNodes[0]));
+// 産卵の指示: タップ → 食料を払って予約 → 女王が順に産む
+const queued = () => state.orders.miner + state.orders.forager + state.orders.soldier;
+function orderEgg(type) {
+  if (!state.firstFood) { notify('🍃 最初の採集アリが餌を巣に運ぶまで待ちましょう'); return; }
+  if (state.food < EGG_COST[type]) { notify('🍃 食料が足りません'); return; }
+  if (ants.length + queued() >= popCap()) { notify('🕳️ 収容力がいっぱいです。採掘アリで巣を広げましょう'); return; }
+  state.food -= EGG_COST[type]; state.orders[type]++; updateUI();
 }
 
 // ==========================================
@@ -333,7 +335,10 @@ class Ant {
   goHome(dest) {
     this.chase = false; this.task = 'home'; dest = dest || homeNode(this.type);
     this.go([{ x: entrance.x, y: entrance.y, node: entrance }].concat(nodePts(path(entrance, dest))), () => {
-      if (this.carry === 'food') { state.food += this.val; incomeLog.push({ t: T, v: this.val }); floater(this.x, this.y - 8, '+' + this.val); this.carry = null; }
+      if (this.carry === 'food') {
+        state.food += this.val; incomeLog.push({ t: T, v: this.val }); floater(this.x, this.y - 8, '+' + this.val); this.carry = null;
+        if (!state.firstFood) { state.firstFood = 1; notify('🍃 最初の餌が届きました！卵を産ませましょう'); }
+      }
       this.task = 'idle';
     });
   }
@@ -529,7 +534,7 @@ document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + b.dataset.tab));
 });
-['miner', 'forager', 'soldier'].forEach(k => $('s-' + k).addEventListener('input', e => { state.target[k] = +e.target.value; }));
+['miner', 'forager', 'soldier'].forEach(k => { $('btn-lay-' + k).onclick = () => orderEgg(k); });
 function upgrade(key, field, mult, fn) {
   $('btn-' + key).onclick = () => {
     if (state.food < state.costs[key]) return;
@@ -559,8 +564,12 @@ function updateUI() {
   S('h-clock', `${isNight() ? '🌙' : '☀️'} ${hh}:${String(mm).padStart(2, '0')}`);
   S('h-env', `${Math.floor(T / DAY) + 1}日目 ${season().n}${env.raining ? ' 🌧️' : ''}`);
   S('pop-n', adults + brood); S('pop-cap', cap); $('pop-bar').style.width = clamp((adults + brood) / cap * 100, 0, 100) + '%';
-  const sum = state.target.miner + state.target.forager + state.target.soldier || 1;
-  for (const k of ['miner', 'forager', 'soldier']) { S('c-' + k, state[k + 's']); S('p-' + k, Math.round(state.target[k] / sum * 100) + '%'); }
+  const full = ants.length + queued() >= cap;
+  for (const k of ['miner', 'forager', 'soldier']) {
+    S('c-' + k, state[k + 's']); S('q-' + k, state.orders[k]); S('cost-' + k, EGG_COST[k]);
+    $('btn-lay-' + k).classList.toggle('dis', !state.firstFood || state.food < EGG_COST[k] || full);
+  }
+  S('lay-hint', !state.firstFood ? '🐜 最初の採集アリが外から餌を運んでくるのを待ちましょう' : full ? '収容力がいっぱいです。採掘アリで巣を広げると増やせます' : state.food < Math.min(...Object.values(EGG_COST)) ? '🍃 食料を集めるとアリを羽化させられます' : '👇 増やしたいアリの「羽化」ボタンをタップ！');
   S('st-dig', Math.round(dig)); S('st-food', inc.toFixed(1)); S('st-comb', Math.round(state.soldiers * 5 * state.dmgMult));
   S('st-brood', brood); S('st-hungry', hungry); S('st-mound', state.mound);
   for (const k of ['claw', 'mand', 'ant']) { S('lv-' + k, state[k + 'Level']); S('cost-' + k, state.costs[k].toLocaleString()); $('btn-' + k).classList.toggle('dis', state.food < state.costs[k]); }
@@ -583,10 +592,12 @@ function updateUI() {
 // ==========================================
 function update(dt) {
   T += dt;
-  // 女王の産卵(食料・収容力・産卵間隔の制約あり)
+  // 女王が予約された卵を順に産む
   state.layT += dt;
-  const adults = state.miners + state.foragers + state.soldiers;
-  if (state.layT >= 6 / (1 + adults / 8) && ants.length < popCap() && state.food >= EGG_COST + RESERVE) { layEgg(); state.layT = 0; }
+  if (state.layT >= 1.2) {
+    const t = ['miner', 'forager', 'soldier'].find(k => state.orders[k] > 0);
+    if (t) { state.orders[t]--; ants.push(new Ant(t, nestNodes[0])); state.layT = 0; }
+  }
   // 雨と崩落
   if (!env.raining) { env.nextRain -= dt; if (env.nextRain <= 0) { env.raining = true; env.rainLeft = 20 + Math.random() * 15; env.collapseT = 6; } }
   else { env.rainLeft -= dt; env.collapseT -= dt; if (env.collapseT <= 0) { env.collapseT = 6; collapse(); } if (env.rainLeft <= 0) { env.raining = false; env.nextRain = 70 + Math.random() * 80; } }
@@ -761,6 +772,7 @@ initNest();
   first.x = 46; first.y = 14; first.timer = 6;
   ants.push(first);
 }
+notify('🥚 卵が孵るのを待ち、最初の働きアリに餌を運ばせましょう');
 let last = performance.now(), uiAcc = 0;
 function frame(now) {
   requestAnimationFrame(frame);
