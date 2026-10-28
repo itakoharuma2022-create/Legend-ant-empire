@@ -271,43 +271,54 @@ function initNest() {
 }
 // 見やすく整理された巣を生成。中央の幹から左右に部屋が並ぶレイアウト。
 function reformNest(silent = false) {
-  if (!silent && !confirm('巣の形を再形成しますか？\n地下方向に主幹を伸ばし、用途別の大型部屋を左右に配置します。アリ・食料・進化・実績・創設時間は維持されます。')) return;
+  if (!silent && !confirm('巣の形を再形成しますか？\n地下に曲線的な主幹と、用途別の角丸四角い部屋を作ります。アリ・食料・進化・実績・創設時間は維持されます。')) return;
   const oldSize = state.nestSize;
   nestNodes = []; activeDiggers = [];
   const add = (x,y,type,parent,r) => { const n = new NestNode(x,y,type,parent); if (r) n.r=r; nestNodes.push(n); return n; };
-  // 座標系では地表がY=-200。Yが大きいほど画面上では地下深くなる。
-  const queen = add(0, 0, 'QUEEN', null, 92);
-  // 女王室から地表の入口へ向かう通路（入口は必ず地表Y=-200）。
+  // GROUND=-200。Yが-200より大きいほど地下側（画面下方向）。
+  // 女王室を地下深くに置き、地表入口(-200)へ曲がった通路で接続する。
+  const queen = add(0, 90, 'QUEEN', null, 105);
   let up = queen;
-  for (let y = -35; y >= GROUND + 12; y -= 32) up = add(0, y, 'TUNNEL', up, 8);
-  entrance = add(0, GROUND, 'ENTRANCE', up, 11);
-  // 地下深部へ伸びる主幹。正のY座標が地下。
-  let trunk = queen;
-  for (let y = 70; y <= 1400; y += 70) trunk = add(0, y, 'TUNNEL', trunk, 9);
-  const rooms = [
-    { y: 180, side: -1, type: 'NURSERY', r: 92, len: 190 },
-    { y: 340, side:  1, type: 'STORAGE', r: 76, len: 210 },
-    { y: 500, side: -1, type: 'BARRACKS', r: 68, len: 195 },
-    { y: 670, side:  1, type: 'NURSERY', r: 104, len: 225 },
-    { y: 850, side: -1, type: 'STORAGE', r: 84, len: 215 },
-    { y: 1030, side: 1, type: 'BARRACKS', r: 74, len: 205 },
-    { y: 1200, side: -1, type: 'NURSERY', r: 108, len: 230 },
-    { y: 1370, side: 1, type: 'STORAGE', r: 88, len: 220 }
+  const entrancePath = [
+    [-5, 45], [-18, 5], [-12, -35], [8, -75], [18, -112], [8, -150], [0, GROUND]
   ];
-  rooms.forEach(room => {
-    const junction = add(0, room.y, 'TUNNEL', trunk, 9);
-    let prev = junction;
-    for (let j=1;j<=6;j++) {
-      const x = room.side * room.len * j / 6;
-      const y = room.y + (j%2 ? -2 : 2);
-      prev = add(x,y,'TUNNEL',prev,9);
-    }
-    add(room.side*(room.len+room.r*.72),room.y,room.type,prev,room.r);
+  for (const [x,y] of entrancePath) up = add(x,y,'TUNNEL',up,9);
+  entrance = add(0, GROUND, 'ENTRANCE', up, 12);
+
+  // 地下深部へゆるく蛇行する主幹。部屋は左右交互、枝も少し曲げる。
+  let trunk = queen;
+  const trunkPoints = [
+    [18,160],[32,225],[18,295],[-2,365],[-18,435],[-8,510],
+    [14,585],[28,660],[12,735],[-10,810],[-22,885],[-4,960],
+    [18,1035],[28,1110],[10,1185],[-12,1260],[0,1335],[18,1410]
+  ];
+  const roomDefs = [
+    {x:-230,y:210,type:'NURSERY',r:110,side:-1, bend:-22},
+    {x:245,y:330,type:'STORAGE',r:88,side:1,bend:24},
+    {x:-220,y:465,type:'BARRACKS',r:82,side:-1,bend:18},
+    {x:265,y:600,type:'NURSERY',r:118,side:1,bend:-20},
+    {x:-250,y:755,type:'STORAGE',r:96,side:-1,bend:-25},
+    {x:225,y:910,type:'BARRACKS',r:86,side:1,bend:22},
+    {x:-265,y:1070,type:'NURSERY',r:122,side:-1,bend:26},
+    {x:250,y:1240,type:'STORAGE',r:98,side:1,bend:-18},
+    {x:-210,y:1390,type:'BARRACKS',r:84,side:-1,bend:20}
+  ];
+  // trunk nodes and room branches are connected by parent links; no branch is above ground.
+  const trunkNodes = [];
+  for (const [x,y] of trunkPoints) { trunk = add(x,y,'TUNNEL',trunk,10); trunkNodes.push(trunk); }
+  roomDefs.forEach((room, i) => {
+    const near = trunkNodes.reduce((best,n) => Math.abs(n.y-room.y) < Math.abs(best.y-room.y) ? n : best, trunkNodes[0]);
+    const midX = room.x * 0.42 + room.bend;
+    let prev = add(near.x + room.bend, near.y + 18, 'TUNNEL', near, 10);
+    prev = add(midX, room.y - 24, 'TUNNEL', prev, 10);
+    prev = add(room.x - room.side * 42, room.y + 8, 'TUNNEL', prev, 10);
+    prev = add(room.x, room.y, 'TUNNEL', prev, 10);
+    add(room.x + room.side * 12, room.y + 4, room.type, prev, room.r);
   });
   state.nestSize = Math.max(oldSize, Math.floor(nestNodes.reduce((sum,n)=>sum+n.r*n.r/10,0)));
   activeDiggers.push({node:queen,angle:Math.PI/2,busy:false});
   ants.forEach(a=>{a.node=queen;a.x=queen.x+(Math.random()-.5)*24;a.y=queen.y+(Math.random()-.5)*24;a.route=[];a.cb=null;a.dg=null;a.task='idle';a.wait=0;});
-  if(!silent){notify('🏰 地下深部に用途別の大型部屋を再形成しました！');saveGame();}
+  if(!silent){notify('🏰 曲線的な地下巣と角丸四角い部屋を再形成しました！');saveGame();}
 }
 
 function homeNode(type) {
@@ -984,9 +995,20 @@ function draw() {
     const rh = Math.max(27, n.r * roomShape.h);
     const rr = Math.min(15, rw * .16, rh * .22);
     const roundedRoom = (x, y, w, h, r) => {
+      // 四角を基本に、辺をほんの少しだけうねらせた角丸形状。
+      // 部屋ごとに安定した差を付け、再描画のたびに形がちらつかないよう座標から決定する。
+      const seed = Math.sin(n.x * 0.071 + n.y * 0.037 + n.r) * 3.2;
+      const rr = Math.min(r, w * .22, h * .25);
       ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
-      else { ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); }
+      ctx.moveTo(x + rr, y + seed);
+      ctx.quadraticCurveTo(x + w*.48, y - seed*.25, x + w - rr, y + seed*.35);
+      ctx.quadraticCurveTo(x + w + seed*.2, y + seed*.2, x + w - rr*.15, y + rr);
+      ctx.lineTo(x + w + seed*.25, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h + seed*.3, x + w - rr, y + h - seed*.2);
+      ctx.quadraticCurveTo(x + w*.52, y + h + seed*.35, x + rr, y + h - seed*.15);
+      ctx.quadraticCurveTo(x - seed*.2, y + h, x + rr*.15, y + h - rr);
+      ctx.lineTo(x - seed*.15, y + rr);
+      ctx.quadraticCurveTo(x, y - seed*.25, x + rr, y + seed);
       ctx.closePath();
     };
     const rg = ctx.createLinearGradient(n.x-rw/2, n.y-rh/2, n.x+rw/2, n.y+rh/2);
