@@ -167,7 +167,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <section class="tab" id="tab-achievements"><div class="card"><div class="row"><h3 style="margin:0">帝国の実績</h3><b><span id="ach-count">0</span> / <span id="ach-total">0</span></b></div><div class="bar" style="margin:10px 0 6px"><i id="ach-bar" style="width:0;background:linear-gradient(90deg,var(--grn),var(--acc))"></i></div><small style="color:var(--sub)">達成条件を満たすと自動で解除されます。実績はセーブデータに記録されます。</small></div><div id="achievement-list"></div></section>
 
     <section class="tab" id="tab-settings">
-      <div class="card"><h3>セーブデータ</h3><p id="save-status" style="font-size:12px;color:var(--sub);line-height:1.7">自動セーブを準備しています…</p><button class="btn" id="btn-save-now" style="margin-top:10px">💾 今すぐ保存</button></div>
+      <div class="card"><h3>セーブデータ</h3><p id="save-status" style="font-size:12px;color:var(--sub);line-height:1.7">自動セーブを準備しています…</p><button class="btn" id="btn-save-now" style="margin-top:10px">💾 今すぐ保存</button><button class="btn" id="btn-export-save" style="margin-top:8px">📤 セーブをJSONで書き出す</button><button class="btn" id="btn-import-save" style="margin-top:8px">📥 JSONセーブを読み込む</button><input type="file" id="save-file-input" accept=".json,application/json" style="display:none"><small style="display:block;color:var(--sub);margin-top:8px;line-height:1.6">別端末ではJSONを書き出してファイルを移し、この画面で読み込んでください。読み込み時は現在の進行状況が置き換わります。</small></div>
       <div class="card"><h3>ゲーム設定</h3><p style="font-size:12px;color:var(--sub);line-height:1.7">ゲームの進行状況、実績、巣の成長データをこのブラウザに保存します。ブラウザのデータ削除や別端末への移行では、セーブが失われる場合があります。</p></div>
       <div class="card"><h3>巣の形を整える</h3><p style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:12px">巣を、中央の幹から左右に部屋が広がる整理された形に再形成します。アリ・食料・進化・実績・創設時間は維持します。現在の通路配置は置き換わります。</p><button class="btn" id="btn-reform-nest">🏰 巣を再形成</button></div>
       <div class="card"><h3>危険な操作</h3><p style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:12px">ゲームを初期状態に戻します。巣・個体数・食料・進化・実績・統計などの保存データがすべて消えます。</p><button class="btn red" id="btn-reset">🗑️ ゲームデータを初期化</button></div>
@@ -271,45 +271,43 @@ function initNest() {
 }
 // 見やすく整理された巣を生成。中央の幹から左右に部屋が並ぶレイアウト。
 function reformNest(silent = false) {
-  if (!silent && !confirm('巣の形を再形成しますか？\n中央の縦通路から左右に大きめの専用部屋を配置します。現在の部屋・通路は置き換わりますが、アリ・食料・進化・実績・創設時間は維持されます。')) return;
+  if (!silent && !confirm('巣の形を再形成しますか？\n地下方向に主幹を伸ばし、用途別の大型部屋を左右に配置します。アリ・食料・進化・実績・創設時間は維持されます。')) return;
   const oldSize = state.nestSize;
   nestNodes = []; activeDiggers = [];
   const add = (x,y,type,parent,r) => { const n = new NestNode(x,y,type,parent); if (r) n.r=r; nestNodes.push(n); return n; };
-  // 座標系では地下ほどY値が小さくなるため、地表(GROUND)より小さい値へ伸ばす。
-  // 女王室を大きくし、幼虫室・食料庫・兵舎は用途ごとにサイズを変える。
-  const queen = add(0, 0, 'QUEEN', null, 78);
+  // 座標系では地表がY=-200。Yが大きいほど画面上では地下深くなる。
+  const queen = add(0, 0, 'QUEEN', null, 92);
+  // 女王室から地表の入口へ向かう通路（入口は必ず地表Y=-200）。
+  let up = queen;
+  for (let y = -35; y >= GROUND + 12; y -= 32) up = add(0, y, 'TUNNEL', up, 8);
+  entrance = add(0, GROUND, 'ENTRANCE', up, 11);
+  // 地下深部へ伸びる主幹。正のY座標が地下。
   let trunk = queen;
-  for (let y = -45; y >= GROUND + 20; y -= 32) trunk = add(0, y, 'TUNNEL', trunk, 8);
-  entrance = add(0, GROUND, 'ENTRANCE', trunk, 11);
-
-  // 主幹から左右に分岐。各部屋は広めに取り、用途ごとのサイズを明確にする。
+  for (let y = 70; y <= 1400; y += 70) trunk = add(0, y, 'TUNNEL', trunk, 9);
   const rooms = [
-    { y: -330, side: -1, type: 'NURSERY', r: 64, len: 150 },
-    { y: -485, side:  1, type: 'STORAGE', r: 58, len: 165 },
-    { y: -640, side: -1, type: 'BARRACKS', r: 52, len: 155 },
-    { y: -795, side:  1, type: 'NURSERY', r: 70, len: 180 },
-    { y: -950, side: -1, type: 'STORAGE', r: 62, len: 170 },
-    { y: -1105, side: 1, type: 'BARRACKS', r: 56, len: 160 },
-    { y: -1260, side: -1, type: 'NURSERY', r: 72, len: 185 },
-    { y: -1415, side: 1, type: 'STORAGE', r: 64, len: 175 }
+    { y: 180, side: -1, type: 'NURSERY', r: 92, len: 190 },
+    { y: 340, side:  1, type: 'STORAGE', r: 76, len: 210 },
+    { y: 500, side: -1, type: 'BARRACKS', r: 68, len: 195 },
+    { y: 670, side:  1, type: 'NURSERY', r: 104, len: 225 },
+    { y: 850, side: -1, type: 'STORAGE', r: 84, len: 215 },
+    { y: 1030, side: 1, type: 'BARRACKS', r: 74, len: 205 },
+    { y: 1200, side: -1, type: 'NURSERY', r: 108, len: 230 },
+    { y: 1370, side: 1, type: 'STORAGE', r: 88, len: 220 }
   ];
-  rooms.forEach((room) => {
-    // 主幹との接続点まで枝を滑らかに近づけ、短いジグザグ通路にする。
-    const junction = add(0, room.y + 58, 'TUNNEL', queen, 8);
+  rooms.forEach(room => {
+    const junction = add(0, room.y, 'TUNNEL', trunk, 9);
     let prev = junction;
-    const steps = 6;
-    for (let j = 1; j <= steps; j++) {
-      const x = room.side * room.len * j / steps;
-      const y = room.y + 58 + (j % 2 ? -3 : 3);
-      prev = add(x, y, 'TUNNEL', prev, 8);
+    for (let j=1;j<=6;j++) {
+      const x = room.side * room.len * j / 6;
+      const y = room.y + (j%2 ? -2 : 2);
+      prev = add(x,y,'TUNNEL',prev,9);
     }
-    add(room.side * (room.len + room.r * 0.72), room.y, room.type, prev, room.r);
+    add(room.side*(room.len+room.r*.72),room.y,room.type,prev,room.r);
   });
-  // 配置された部屋の面積を反映。進行状況や実績は維持する。
   state.nestSize = Math.max(oldSize, Math.floor(nestNodes.reduce((sum,n)=>sum+n.r*n.r/10,0)));
   activeDiggers.push({node:queen,angle:Math.PI/2,busy:false});
   ants.forEach(a=>{a.node=queen;a.x=queen.x+(Math.random()-.5)*24;a.y=queen.y+(Math.random()-.5)*24;a.route=[];a.cb=null;a.dg=null;a.task='idle';a.wait=0;});
-  if(!silent){notify('🏰 用途別の大型部屋を備えた巣に再形成しました！');saveGame();}
+  if(!silent){notify('🏰 地下深部に用途別の大型部屋を再形成しました！');saveGame();}
 }
 
 function homeNode(type) {
@@ -733,6 +731,18 @@ function resetGame(){
  localStorage.removeItem(SAVE_KEY);location.reload();
 }
 $('btn-save-now').onclick=()=>{if(saveGame())notify('💾 ゲームを保存しました');};
+$('btn-export-save').onclick=()=>{
+  if(!saveGame()){alert('保存に失敗しました。');return;}
+  try{const raw=localStorage.getItem(SAVE_KEY);const blob=new Blob([raw],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ant-empire-save-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);notify('📤 JSONセーブを書き出しました');}catch(e){alert('書き出しに失敗しました: '+e.message);}
+};
+$('btn-import-save').onclick=()=> $('save-file-input').click();
+$('save-file-input').onchange=async ev=>{
+  const file=ev.target.files&&ev.target.files[0];if(!file)return;
+  try{const text=await file.text();const d=JSON.parse(text);if(!d||d.version!==3||!d.state||!Array.isArray(d.nodes)||!Array.isArray(d.ants))throw new Error('アリ帝国の有効なセーブJSONではありません');
+    if(!confirm('このJSONのセーブデータを読み込みますか？\n現在のゲーム進行状況は置き換わります。事前に現在のセーブを書き出すことをおすすめします。'))return;
+    localStorage.setItem(SAVE_KEY,JSON.stringify(d));location.reload();
+  }catch(e){alert('読み込みに失敗しました。正しいアリ帝国のJSONか確認してください。\n'+e.message);}finally{ev.target.value='';}
+};
 $('btn-reset').onclick=resetGame;
 $('btn-reform-nest').onclick=()=>reformNest(false);
 window.addEventListener('pagehide',saveGame);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveGame();});
