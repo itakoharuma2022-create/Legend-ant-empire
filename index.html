@@ -2,113 +2,145 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>アリ帝国 ～小さなアゴから地球征服まで～</title>
-<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>アリ帝国 ～一粒の卵から地球征服まで～</title>
 <style>
-body{background:#2e1b15;color:#f5f5f5;font-family:'Inter',sans-serif;overflow:hidden;user-select:none;touch-action:none}
-.sugar-cube{width:110px;height:110px;background:#fff;border-radius:12px;box-shadow:inset -8px -8px 15px rgba(0,0,0,.1),0 8px 0 #b0bec5,0 12px 15px rgba(0,0,0,.4);transition:transform .05s,box-shadow .05s;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto}
-.sugar-cube:active{transform:translateY(8px);box-shadow:inset -8px -8px 15px rgba(0,0,0,.1),0 0 0 #b0bec5,0 4px 6px rgba(0,0,0,.4)}
-.floating-text{position:absolute;color:#ffeb3b;font-weight:bold;pointer-events:none;animation:floatUp .8s ease-out forwards;text-shadow:1px 1px 2px rgba(0,0,0,.8);z-index:50}
-@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.5)}}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#5d4037;border-radius:4px}
-.stat-box{background:#4e342e;border:2px solid #5d4037;border-radius:.75rem;padding:.5rem;text-align:center;box-shadow:0 4px 6px rgba(0,0,0,.3)}
-#nest-canvas{cursor:grab}#nest-canvas:active{cursor:grabbing}
-.hp-bar-bg{background:#3e2723;border-radius:999px;overflow:hidden;height:12px;width:100%;border:1px solid #5d4037}
-.hp-bar-fill{background:#ef4444;height:100%;transition:width .2s}
+:root{--bg:#120d0a;--panel:rgba(30,21,16,.94);--card:rgba(255,236,210,.05);--line:rgba(255,226,190,.12);--txt:#f4eadc;--sub:#b9a58f;--acc:#f2a93b;--acc2:#ffd27a;--grn:#8bc96b;--red:#e8675d;--blu:#6fb4f0}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Hiragino Sans','Noto Sans JP','Yu Gothic',system-ui,sans-serif;overflow:hidden;user-select:none}
+#app{display:flex;flex-direction:column;height:100%}
+#stage{position:relative;flex:1;min-height:0;overflow:hidden}
+#nest-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}
+#nest-canvas:active{cursor:grabbing}
+.glass{background:rgba(18,12,9,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px}
+#hud{position:absolute;top:max(8px,env(safe-area-inset-top));left:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.chip{padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.chip b{font-size:15px;font-variant-numeric:tabular-nums}
+.chip small{color:var(--sub);font-size:10px}
+.chip.title{font-weight:700;color:var(--acc2);letter-spacing:.04em}
+#toasts{position:absolute;top:92px;left:8px;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-width:78%}
+.toast{font-size:12px;padding:6px 10px;border-radius:10px;background:rgba(40,16,12,.78);border:1px solid rgba(232,103,93,.45);animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+#mini{position:absolute;left:8px;bottom:8px;width:min(46%,260px);height:46px;border-radius:10px;border:1px solid var(--line);background:rgba(10,8,6,.6);cursor:pointer;touch-action:none}
+#ctrl{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+#ctrl button{width:38px;height:38px;border-radius:12px;font-size:16px;color:var(--txt);cursor:pointer;border:1px solid var(--line);background:rgba(18,12,9,.7);backdrop-filter:blur(8px)}
+#ctrl button:active{background:rgba(242,169,59,.35)}
+#panel{height:44%;display:flex;flex-direction:column;background:var(--panel);border-top:1px solid var(--line);min-height:0}
+#tabs{display:flex;gap:6px;padding:8px 10px 6px;flex-shrink:0}
+#tabs button{flex:1;padding:8px 4px;font-size:13px;font-weight:600;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--sub);cursor:pointer}
+#tabs button.on{background:rgba(242,169,59,.14);border-color:rgba(242,169,59,.4);color:var(--acc2)}
+.tab{display:none;overflow-y:auto;padding:4px 10px 18px;flex:1;min-height:0}
+.tab.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:10px}
+.card h3{font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;letter-spacing:.06em}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bar{height:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;transition:width .3s}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{text-align:center;padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.04)}
+.stat small{display:block;color:var(--sub);font-size:10px;margin-bottom:2px}
+.stat b{font-size:16px;font-variant-numeric:tabular-nums}
+.cs{margin-bottom:12px}
+.cs .row{font-size:13px;margin-bottom:5px}
+.cs .row span:last-child{color:var(--sub);font-size:12px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;background:rgba(255,255,255,.12);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--acc);border:3px solid #3a2410;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.btn{width:100%;padding:11px;border-radius:12px;font-weight:700;font-size:14px;color:#2a1706;background:linear-gradient(180deg,var(--acc2),var(--acc));border:none;cursor:pointer;box-shadow:0 3px 0 #9a6414}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #9a6414}
+.btn.dis,.btn:disabled{opacity:.4;filter:grayscale(.7);cursor:not-allowed}
+.btn.red{color:#fff;background:linear-gradient(180deg,#e8675d,#b2352b);box-shadow:0 3px 0 #6e1f19}
+.up{display:flex;gap:10px;align-items:center}
+.up .ic{font-size:28px;width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.up .tx{flex:1;min-width:0}.up .tx b{font-size:14px}.up .tx small{display:block;color:var(--sub);font-size:11px;margin-top:2px}
+.up .btn{width:auto;padding:9px 12px;font-size:13px;white-space:nowrap}
+.hidden{display:none!important}
+@media(min-width:900px){#app{flex-direction:row}#panel{height:auto;width:390px;border-top:none;border-left:1px solid var(--line)}#toasts{top:56px}}
 </style>
 </head>
-<body class="flex flex-col md:flex-row h-screen w-screen">
-
-<div id="nest-container" class="w-full md:w-2/3 h-1/2 md:h-full relative overflow-hidden border-b-4 md:border-b-0 md:border-r-4 border-[#3e2723] bg-[#2e1b15]">
-  <canvas id="nest-canvas" class="block w-full h-full"></canvas>
-  <div class="absolute top-2 left-2 pointer-events-none bg-black/70 px-3 py-2 rounded-xl border border-black/50 backdrop-blur-sm shadow-lg">
-    <h1 class="text-amber-500 font-bold flex items-center gap-2 mb-1"><span class="text-xl">👑</span> アリ帝国</h1>
-    <div class="text-xs text-gray-300 flex flex-col gap-0.5">
-      <div>成虫アリ: <span id="total-ants" class="text-white font-bold">1</span>匹</div>
-      <div>卵~蛹・産卵待ち: <span id="total-larvae" class="text-green-300 font-bold">0</span>匹</div>
-      <div>コロニー面積: <span id="nest-size" class="text-amber-200 font-bold">100</span> cm²</div>
-      <div id="env-info" class="text-sky-200"></div>
-      <div id="alert-info" class="text-red-300 font-bold"></div>
+<body>
+<div id="app">
+  <main id="stage">
+    <canvas id="nest-canvas"></canvas>
+    <header id="hud">
+      <div class="glass chip title">👑 アリ帝国</div>
+      <div class="glass chip">🍃 <b id="h-food">0</b><small id="h-rate">+0.0/s</small></div>
+      <div class="glass chip">🐜 <b id="h-pop">0</b><small id="h-cap">/ 0</small></div>
+      <div class="glass chip">📐 <b id="h-nest">0</b><small>cm²</small></div>
+      <div class="glass chip"><span id="h-clock">☀️ 6:00</span><small id="h-env"></small></div>
+    </header>
+    <div id="toasts"></div>
+    <canvas id="mini" width="520" height="92"></canvas>
+    <div id="ctrl">
+      <button id="z-in" aria-label="拡大">＋</button>
+      <button id="z-out" aria-label="縮小">－</button>
+      <button id="v-fit" aria-label="地上全体">🌐</button>
+      <button id="v-toggle" aria-label="地上/地下">⇅</button>
     </div>
-    <div class="text-[10px] text-gray-400 mt-1">※ドラッグ/スワイプで移動</div>
-  </div>
-</div>
+  </main>
 
-<div class="w-full md:w-1/3 h-1/2 md:h-full bg-[#3e2723] flex flex-col overflow-y-auto relative p-3 md:p-4">
-  <div class="grid grid-cols-3 gap-2 mb-4 flex-shrink-0">
-    <div class="stat-box col-span-3 pb-3">
-      <div class="text-xs text-gray-300 mb-1">備蓄食料 🍃</div>
-      <div class="text-3xl font-bold text-white mb-1"><span id="food">0</span></div>
-      <div class="text-[11px] text-amber-400">搬入: <span id="fps" class="font-bold">0</span> /s (タップ: <span id="click-power">1</span>)</div>
-    </div>
-    <div class="stat-box"><div class="text-[10px] text-gray-300 mb-1">掘削 ⛏️</div><div class="text-sm font-bold text-blue-300"><span id="dig-power">0</span>回/分</div></div>
-    <div class="stat-box"><div class="text-[10px] text-gray-300 mb-1">搬入 🍃</div><div class="text-sm font-bold text-green-300"><span id="food-power">0</span>/s</div></div>
-    <div class="stat-box"><div class="text-[10px] text-gray-300 mb-1">戦闘 ⚔️</div><div class="text-sm font-bold text-red-400"><span id="combat-power">0</span></div></div>
-  </div>
+  <aside id="panel">
+    <nav id="tabs">
+      <button class="on" data-tab="colony">🐜 コロニー</button>
+      <button data-tab="evolve">🧬 進化</button>
+      <button data-tab="battle">⚔️ 地上戦</button>
+    </nav>
 
-  <div class="flex-shrink-0 flex items-center justify-center py-2 mb-4">
-    <div id="sugar-cube" class="sugar-cube"><span class="text-5xl drop-shadow-md pointer-events-none">⬜</span></div>
-  </div>
-
-  <div class="flex-grow space-y-5 pb-10">
-    <div class="bg-[#4e342e] rounded-xl p-3 border border-[#795548] shadow-lg">
-      <h2 class="text-sm font-bold mb-2 text-red-300 flex items-center gap-2"><span>🌍</span> 地上への進出 (外敵討伐)</h2>
-      <div id="battle-panel" class="text-center">
-        <div class="text-xs text-gray-300 mb-1">現在のターゲット</div>
-        <div class="text-2xl mb-1"><span id="enemy-emoji">🦗</span> <span id="enemy-name" class="text-base font-bold text-white">迷子のバッタ</span></div>
-        <div class="hp-bar-bg mb-2"><div id="enemy-hp-bar" class="hp-bar-fill" style="width:100%"></div></div>
-        <div class="text-[10px] text-gray-400 mb-2">HP: <span id="enemy-hp-text">100 / 100</span> | 報酬: 🍃<span id="enemy-reward">500</span></div>
-        <button id="btn-battle" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors opacity-50 cursor-not-allowed">⚔️ 討伐を開始する</button>
-        <div id="battle-status" class="text-[10px] text-amber-300 mt-2 hidden">戦闘中... 兵隊アリが地上で戦っています</div>
+    <section class="tab on" id="tab-colony">
+      <div class="card">
+        <h3>個体数と収容力</h3>
+        <div class="row" style="margin-bottom:6px"><span style="font-size:22px;font-weight:700"><span id="pop-n">0</span><small style="font-size:12px;color:var(--sub)"> / <span id="pop-cap">0</span> 匹</small></span><span style="font-size:11px;color:var(--sub)">巣を掘ると収容力が増えます</span></div>
+        <div class="bar"><i id="pop-bar" style="width:0;background:linear-gradient(90deg,var(--grn),var(--acc))"></i></div>
       </div>
-    </div>
-
-    <div>
-      <h2 class="text-sm font-bold mb-2 border-b border-[#5d4037] pb-1 text-gray-200 flex items-center gap-2"><span>🥚</span> 産卵の指示 (女王が順に産みます)</h2>
-      <div class="flex flex-col gap-2">
-        <button id="btn-miner" class="w-full bg-[#3e2723] hover:bg-[#4e342e] border border-[#5d4037] rounded-lg p-2 flex justify-between items-center transition-colors">
-          <div class="text-left"><div class="text-sm font-bold text-blue-200">⛏️ 働きアリ（採掘）</div><div class="text-[10px] text-gray-400">掘削面へ行き、土を運び出す</div></div>
-          <div class="text-right"><div class="text-[10px] text-gray-300 mb-1">成虫: <span id="miner-count" class="font-bold">0</span> / 予約: <span id="miner-queue">0</span></div><div class="text-xs font-bold text-amber-400">🍃 <span id="miner-cost">15</span></div></div>
-        </button>
-        <button id="btn-forager" class="w-full bg-[#3e2723] hover:bg-[#4e342e] border border-[#5d4037] rounded-lg p-2 flex justify-between items-center transition-colors">
-          <div class="text-left"><div class="text-sm font-bold text-green-200">🍃 働きアリ2（食料）</div><div class="text-[10px] text-gray-400">昼に地上へ出て餌を運ぶ</div></div>
-          <div class="text-right"><div class="text-[10px] text-gray-300 mb-1">成虫: <span id="forager-count" class="font-bold">0</span> / 予約: <span id="forager-queue">0</span></div><div class="text-xs font-bold text-amber-400">🍃 <span id="forager-cost">20</span></div></div>
-        </button>
-        <button id="btn-soldier" class="w-full bg-[#3e2723] hover:bg-[#4e342e] border border-[#5d4037] rounded-lg p-2 flex justify-between items-center transition-colors">
-          <div class="text-left"><div class="text-sm font-bold text-red-300">⚔️ 働きアリ3（戦闘）</div><div class="text-[10px] text-gray-400">地上の外敵・他コロニーと戦う</div></div>
-          <div class="text-right"><div class="text-[10px] text-gray-300 mb-1">成虫: <span id="soldier-count" class="font-bold">0</span> / 予約: <span id="soldier-queue">0</span></div><div class="text-xs font-bold text-amber-400">🍃 <span id="soldier-cost">50</span></div></div>
-        </button>
+      <div class="card">
+        <h3>女王への方針 (産み分けの比率)</h3>
+        <div class="cs"><div class="row"><span>⛏️ 採掘アリ <b id="c-miner">0</b></span><span id="p-miner">30%</span></div><input type="range" id="s-miner" min="0" max="100" value="30"></div>
+        <div class="cs"><div class="row"><span>🍃 採集アリ <b id="c-forager">0</b></span><span id="p-forager">55%</span></div><input type="range" id="s-forager" min="0" max="100" value="55"></div>
+        <div class="cs" style="margin-bottom:0"><div class="row"><span>⚔️ 兵隊アリ <b id="c-soldier">0</b></span><span id="p-soldier">15%</span></div><input type="range" id="s-soldier" min="0" max="100" value="15"></div>
       </div>
-    </div>
-
-    <div>
-      <h2 class="text-sm font-bold mb-2 border-b border-[#5d4037] pb-1 text-gray-200 flex items-center gap-2"><span>🧬</span> コロニーの進化</h2>
-      <div class="flex flex-col gap-2">
-        <button id="btn-jaw" class="w-full bg-black/20 border border-[#5d4037] hover:bg-[#4e342e] rounded-lg p-2 flex justify-between items-center transition-colors">
-          <div class="text-left"><div class="text-sm font-bold text-white">🦷 巨大なアゴ</div><div class="text-[10px] text-gray-400">タップ時の獲得量 +1</div></div>
-          <div class="text-right"><div class="text-[10px] text-gray-300 mb-1">Lv: <span id="jaw-level" class="font-bold">1</span></div><div class="text-xs font-bold text-amber-400">🍃 <span id="jaw-cost">100</span></div></div>
-        </button>
-        <button id="btn-claw" class="w-full bg-black/20 border border-[#5d4037] hover:bg-[#4e342e] rounded-lg p-2 flex justify-between items-center transition-colors">
-          <div class="text-left"><div class="text-sm font-bold text-white">🪨 鋭利な爪</div><div class="text-[10px] text-gray-400">掘削が速くなり、採掘アリの足も速くなる</div></div>
-          <div class="text-right"><div class="text-[10px] text-gray-300 mb-1">Lv: <span id="claw-level" class="font-bold">1</span></div><div class="text-xs font-bold text-amber-400">🍃 <span id="claw-cost">300</span></div></div>
-        </button>
+      <div class="card">
+        <h3>状況</h3>
+        <div class="grid3">
+          <div class="stat"><small>掘削/分</small><b id="st-dig">0</b></div>
+          <div class="stat"><small>搬入/秒</small><b id="st-food">0</b></div>
+          <div class="stat"><small>戦闘力</small><b id="st-comb">0</b></div>
+          <div class="stat"><small>卵〜蛹</small><b id="st-brood">0</b></div>
+          <div class="stat"><small>空腹の幼虫</small><b id="st-hungry">0</b></div>
+          <div class="stat"><small>土の山</small><b id="st-mound">0</b></div>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <section class="tab" id="tab-evolve">
+      <div class="card up"><div class="ic">🪨</div><div class="tx"><b>鋭利な爪 Lv<span id="lv-claw">1</span></b><small>掘削が2倍速、採掘アリの足も速くなる</small></div><button class="btn" id="btn-claw">🍃 <span id="cost-claw">300</span></button></div>
+      <div class="card up"><div class="ic">🦷</div><div class="tx"><b>強靭な大顎 Lv<span id="lv-mand">1</span></b><small>兵隊アリの攻撃力が1.5倍</small></div><button class="btn" id="btn-mand">🍃 <span id="cost-mand">200</span></button></div>
+      <div class="card up"><div class="ic">📡</div><div class="tx"><b>鋭敏な触角 Lv<span id="lv-ant">1</span></b><small>フェロモンが長持ちし、餌の発見範囲も広がる</small></div><button class="btn" id="btn-ant">🍃 <span id="cost-ant">150</span></button></div>
+    </section>
+
+    <section class="tab" id="tab-battle">
+      <div class="card" style="text-align:center">
+        <h3>現在のターゲット</h3>
+        <div style="font-size:54px;line-height:1.1" id="enemy-emoji">🦗</div>
+        <div style="font-weight:700;margin:4px 0 8px" id="enemy-name">迷子のバッタ</div>
+        <div class="bar" style="height:10px"><i id="enemy-hp-bar" style="width:100%;background:linear-gradient(90deg,#e8675d,#f2a93b)"></i></div>
+        <div style="font-size:11px;color:var(--sub);margin:6px 0 10px">HP <span id="enemy-hp-text">100 / 100</span> ・ 報酬 🍃<span id="enemy-reward">500</span></div>
+        <button class="btn red" id="btn-battle">⚔️ 討伐を開始する</button>
+        <div id="battle-status" class="hidden" style="font-size:12px;color:var(--acc2)">兵隊アリが地上で戦っています…</div>
+      </div>
+      <div class="card"><h3>縄張り</h3><div id="rival-status" style="font-size:13px;color:var(--sub)">周囲は静かです</div></div>
+    </section>
+  </aside>
 </div>
 
 <script>
 // ==========================================
 // 定数・状態
 // ==========================================
-const GROUND = -200, SURF = GROUND - 3;
-const DAY = 120; // 1日の長さ(秒)
+const GROUND = -200, SURF = GROUND - 3, WORLD = 1500, DAY = 120, EGG_COST = 6, RESERVE = 10;
 const SEASONS = [
-  { n: '春', c: '#7cb342', sp: 1,    sv: 1 },
-  { n: '夏', c: '#2e7d32', sp: 1.15, sv: 0.8 },
-  { n: '秋', c: '#a1887f', sp: 0.9,  sv: 1.2 },
-  { n: '冬', c: '#cfd8dc', sp: 0.5,  sv: 3 }
+  { n: '春', c: '#7cb342', leaf: '#8bc34a', sp: 1,    sv: 1 },
+  { n: '夏', c: '#2e7d32', leaf: '#2f7d32', sp: 1.15, sv: 0.8 },
+  { n: '秋', c: '#a1887f', leaf: '#e0842a', sp: 0.9,  sv: 1.2 },
+  { n: '冬', c: '#cfd8dc', leaf: null,      sp: 0.5,  sv: 3 }
 ];
 const ENEMIES = [
   { name: "迷子のバッタ", hp: 100, reward: 500, emoji: "🦗" },
@@ -119,37 +151,29 @@ const ENEMIES = [
   { name: "人間の子供(靴)", hp: 100000, reward: 1000000, emoji: "👟" }
 ];
 const NODE_TYPES = {
-  QUEEN:    { color: '#1a0f0c', r: 50 },
-  TUNNEL:   { color: '#271610', r: 8 },
-  ENTRANCE: { color: '#1a0f0c', r: 9 },
-  NURSERY:  { color: '#3d2314', r: 25 },
-  STORAGE:  { color: '#1f2b1a', r: 35 },
-  BARRACKS: { color: '#2b1a1a', r: 30 }
+  QUEEN: { color: '#1c110c', r: 50 }, TUNNEL: { color: '#25150e', r: 8 }, ENTRANCE: { color: '#1a0f0c', r: 9 },
+  NURSERY: { color: '#4a2b18', r: 25 }, STORAGE: { color: '#2a3322', r: 35 }, BARRACKS: { color: '#3a2020', r: 30 }
 };
-const BODY = { miner: '#64b5f6', forager: '#81c784', soldier: '#e57373', queen: '#ffb74d', rival: '#ba68c8' };
+const BODY = { miner: '#6fb4f0', forager: '#8bc96b', soldier: '#e8675d', queen: '#ffb74d', rival: '#b36bd6' };
 
 const state = {
-  food: 0, nestSize: 200, miners: 0, foragers: 0, soldiers: 0,
-  jawLevel: 1, clawLevel: 1, minerMult: 1,
-  costs: { miner: 15, forager: 20, soldier: 50, jaw: 100, claw: 300 },
-  orders: { miner: 0, forager: 0, soldier: 0 },
-  layT: 0, digCount: 0, mound: 0,
-  inBattle: false, enemyIndex: 0
+  food: 30, nestSize: 200, miners: 0, foragers: 0, soldiers: 0,
+  clawLevel: 1, mandLevel: 1, antLevel: 1, minerMult: 1, dmgMult: 1,
+  costs: { claw: 300, mand: 200, ant: 150 },
+  target: { miner: 30, forager: 55, soldier: 15 },
+  layT: 0, digCount: 0, mound: 0, inBattle: false, enemyIndex: 0
 };
-const env = { raining: false, rainLeft: 0, nextRain: 70, collapseT: 0, nextFood: 4, nextRival: 160, rivalWave: false, rivalKills: 0, msg: '', msgT: 0 };
-
+const env = { raining: false, rainLeft: 0, nextRain: 80, collapseT: 0, nextFood: 3, nextRival: 170, rivalWave: false, rivalKills: 0 };
 let T = 15, antId = 0, boss = null;
-let ants = [], items = [{ e: '🍃', val: 8, trips: 25, x: 180 }], trail = [], rivals = [], floaters = [];
+let ants = [], items = [{ e: '🍃', val: 12, trips: 25, x: 260 }], trail = [], rivals = [], floaters = [], toasts = [];
 let nestNodes = [], activeDiggers = [], entrance = null;
 const incomeLog = [], digLog = [];
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const popCap = () => 4 + Math.floor(state.nestSize / 60);
 
-// ==========================================
-// 時間・季節・天候
-// ==========================================
-const dayPhase = () => (T % DAY) / DAY;            // 0〜0.6 昼 / 0.6〜1 夜
+const dayPhase = () => (T % DAY) / DAY;
 const isNight = () => dayPhase() >= 0.6;
 const season = () => SEASONS[Math.floor(T / (DAY * 4)) % 4];
 const canGoOut = () => !isNight() && !env.raining;
@@ -160,11 +184,11 @@ function light() {
   if (p < 0.95) return 0.2;
   return 0.2 + (p - 0.95) / 0.05 * 0.8;
 }
-function floater(x, y, txt) { floaters.push({ x, y, txt, t: 1.3 }); }
-function notify(msg) { env.msg = msg; env.msgT = 6; }
+function floater(x, y, txt) { floaters.push({ x, y, txt, t: 1.4 }); }
+function notify(msg) { if (!toasts.some(t => t.msg === msg)) toasts.push({ msg, t: 7 }); if (toasts.length > 3) toasts.shift(); }
 
 // ==========================================
-// 巣のデータ構造と経路探索
+// 巣のデータ構造
 // ==========================================
 class NestNode {
   constructor(x, y, type, parent) {
@@ -174,7 +198,7 @@ class NestNode {
     if (parent) parent.children.push(this);
   }
 }
-function path(a, b) { // 木構造上の a→b のノード列
+function path(a, b) {
   const A = [], setA = new Set(); let n = a;
   while (n) { A.push(n); setA.add(n); n = n.parent; }
   const down = []; n = b;
@@ -193,39 +217,30 @@ function initNest() {
   const queen = new NestNode(0, 0, 'QUEEN', null);
   nestNodes.push(queen);
   let prev = queen;
-  for (let y = -50; y > GROUND; y += -50) { prev = new NestNode(0, y, 'TUNNEL', prev); nestNodes.push(prev); }
-  entrance = new NestNode(0, GROUND, 'ENTRANCE', prev);
-  entrance.r = 9; nestNodes.push(entrance);
+  for (let y = -50; y > GROUND; y -= 50) { prev = new NestNode(0, y, 'TUNNEL', prev); nestNodes.push(prev); }
+  entrance = new NestNode(0, GROUND, 'ENTRANCE', prev); entrance.r = 9; nestNodes.push(entrance);
   activeDiggers.push({ node: queen, angle: Math.PI / 2, busy: false });
 }
 function homeNode(type) {
   const pick = t => { const l = nestNodes.filter(n => n.type === t); return l.length ? l[Math.random() * l.length | 0] : nestNodes[0]; };
   return type === 'forager' ? pick('STORAGE') : type === 'soldier' ? pick('BARRACKS') : nestNodes[0];
 }
-
-// 掘削1ステップ(部屋・通路を1つ追加)
 function digStep(d) {
   const p = d.node, dist = p.r * 0.7 + 15;
   d.angle += (Math.random() - .5) * 1.8;
   if (Math.sin(d.angle) < 0) d.angle += Math.PI;
-  const nx = p.x + Math.cos(d.angle) * dist, ny = p.y + Math.sin(d.angle) * dist;
-  const k = ++state.digCount;
+  const nx = p.x + Math.cos(d.angle) * dist, ny = p.y + Math.sin(d.angle) * dist, k = ++state.digCount;
   let type = 'TUNNEL';
   if (k === 3) type = 'NURSERY'; else if (k === 7) type = 'STORAGE'; else if (k === 11) type = 'BARRACKS';
   else if (k > 11 && Math.random() < 0.18) { const r = Math.random(); type = r < .3 ? 'NURSERY' : r < .6 ? 'STORAGE' : 'BARRACKS'; }
   const n = new NestNode(nx, ny, type, p);
-  nestNodes.push(n);
-  state.nestSize += Math.floor(n.r * n.r / 10);
-  d.node = n;
-  digLog.push(T);
+  nestNodes.push(n); state.nestSize += Math.floor(n.r * n.r / 10); d.node = n; digLog.push(T);
   if (ny > 3000) activeDiggers.splice(activeDiggers.indexOf(d), 1);
   if (activeDiggers.length < Math.min(8, 1 + Math.floor(state.miners / 2)) && Math.random() < 0.3) {
     const c = nestNodes.filter(q => q.y >= 0);
     activeDiggers.push({ node: c[Math.random() * c.length | 0], angle: Math.PI / 2 + (Math.random() - .5) * 2, busy: false });
   }
 }
-
-// 雨による崩落
 function isUsed(n) { return ants.some(a => a.node === n || a.route.some(p => p.node === n) || (a.dg && a.dg.node === n)); }
 function collapse() {
   if (Math.random() < 0.5) return;
@@ -236,8 +251,7 @@ function collapse() {
   nestNodes.splice(nestNodes.indexOf(n), 1);
   activeDiggers.forEach(d => { if (d.node === n) d.node = n.parent; });
   state.nestSize = Math.max(100, state.nestSize - Math.floor(n.r * n.r / 10));
-  floater(n.x, n.y, '崩落!');
-  notify('🌧️ 雨で通路が崩落！採掘アリが掘り直します');
+  floater(n.x, n.y, '崩落!'); notify('🌧️ 雨で通路が崩落！採掘アリが掘り直します');
 }
 
 // ==========================================
@@ -249,16 +263,24 @@ function fightTarget(a) {
   for (const r of rivals) { const d = Math.abs(r.x - a.x); if (d < bd) { bd = d; best = r; } }
   return best;
 }
-function followable(it) { return trail.some(t => t.s > 0.15 && Math.abs(t.x - it.x) < 70); }
+const followable = it => trail.some(t => t.s > 0.15 && Math.abs(t.x - it.x) < 70);
 function spawnItem() {
-  const k = [{ e: '🍃', v: 8, t: 25 }, { e: '🪰', v: 12, t: 40 }, { e: '🍬', v: 15, t: 20 }][Math.random() * 3 | 0];
-  items.push({ e: k.e, val: k.v, trips: k.t, x: (Math.random() < .5 ? -1 : 1) * (80 + Math.random() * 420) });
+  const k = [{ e: '🍃', v: 12, t: 25 }, { e: '🪰', v: 20, t: 40 }, { e: '🍬', v: 26, t: 20 }][Math.random() * 3 | 0];
+  items.push({ e: k.e, val: k.v, trips: k.t, x: (Math.random() < .5 ? -1 : 1) * (100 + Math.pow(Math.random(), 1.5) * 1250) });
 }
 function spawnRivals() {
-  const n = 3 + Math.min(4, Math.floor(state.soldiers / 4)), side = Math.random() < .5 ? -1 : 1;
-  for (let i = 0; i < n; i++) rivals.push({ id: ++antId, x: side * (660 + i * 18), y: SURF, hp: 30, life: 45, home: side * 760, ang: side > 0 ? Math.PI : 0, legT: 0 });
+  const n = 3 + Math.min(5, Math.floor(state.soldiers / 4)), side = Math.random() < .5 ? -1 : 1;
+  for (let i = 0; i < n; i++) rivals.push({ id: ++antId, x: side * (WORLD - 40 + i * 18), y: SURF, hp: 30, life: 150, home: side * (WORLD + 120), ang: side > 0 ? Math.PI : 0, legT: 0 });
   env.rivalWave = true; env.rivalKills = 0;
   notify('⚠️ 他コロニーのアリが餌を奪いに来た！');
+}
+// 女王の産卵: 食料・収容力・方針比率に従う
+function layEgg() {
+  const cnt = { miner: 0, forager: 0, soldier: 0 }; ants.forEach(a => cnt[a.type]++);
+  const sum = state.target.miner + state.target.forager + state.target.soldier || 1, tot = ants.length || 1;
+  let best = 'forager', bd = -9;
+  for (const k of ['miner', 'forager', 'soldier']) { const d = state.target[k] / sum - cnt[k] / tot; if (d > bd) { bd = d; best = k; } }
+  state.food -= EGG_COST; ants.push(new Ant(best, nestNodes[0]));
 }
 
 // ==========================================
@@ -267,21 +289,21 @@ function spawnRivals() {
 class Ant {
   constructor(type, node) {
     this.id = ++antId; this.type = type; this.node = node;
-    const a = Math.random() * 6.283, r = Math.random() * node.r * 0.5;
+    const a = Math.random() * 6.283, r = 18 + Math.random() * node.r * 0.4;
     this.x = node.x + Math.cos(a) * r; this.y = node.y + Math.sin(a) * r;
     this.lx = this.x; this.ly = this.y;
     this.phase = 'egg'; this.timer = 5; this.moved = false; this.claimed = false; this.carrier = null; this.hungry = false;
     this.angle = Math.random() * 6.283; this.route = []; this.cb = null; this.task = 'idle';
     this.carry = null; this.val = 0; this.wait = 0; this.digging = 0; this.dg = null; this.chase = false;
-    this.base = 42 + Math.random() * 22; this.jit = 0; this.legT = Math.random() * 6;
+    this.base = 42 + Math.random() * 22; this.jit = 0; this.legT = Math.random() * 6; this.lane = (this.id % 5) * 2.5;
   }
+  sy() { return SURF - this.lane; }
   speed() {
     let s = this.base * season().sp;
     if (this.type === 'miner') s *= Math.min(3, Math.sqrt(state.minerMult));
     if (this.carry) s *= 0.85;
     return s;
   }
-  // 卵→幼虫(食料を消費)→蛹→成虫
   grow(dt) {
     if (this.carrier) return;
     if (this.phase === 'larva') {
@@ -295,7 +317,7 @@ class Ant {
     else if (this.phase === 'larva') { this.phase = 'pupa'; this.timer = 4; }
     else { this.phase = 'adult'; state[this.type + 's']++; }
   }
-  walk(tx, ty, dt, spd) { // 到達で0、それ以外は残り距離
+  walk(tx, ty, dt, spd) {
     const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy), sp = spd * dt;
     if (d <= sp + 2.5) { this.x = tx; this.y = ty; return 0; }
     this.jit = (this.jit + (Math.random() - .5) * 0.6) * 0.9;
@@ -309,29 +331,23 @@ class Ant {
   go(pts, cb) { this.route = pts; this.cb = cb || null; if (!pts.length && cb) { this.cb = null; cb.call(this); } }
   outPts() { return nodePts(path(this.node, entrance)); }
   goHome(dest) {
-    this.chase = false; this.task = 'home';
-    dest = dest || homeNode(this.type);
+    this.chase = false; this.task = 'home'; dest = dest || homeNode(this.type);
     this.go([{ x: entrance.x, y: entrance.y, node: entrance }].concat(nodePts(path(entrance, dest))), () => {
-      if (this.carry === 'food') {
-        state.food += this.val; incomeLog.push({ t: T, v: this.val });
-        floater(this.x, this.y - 8, '+' + this.val); this.carry = null;
-      }
+      if (this.carry === 'food') { state.food += this.val; incomeLog.push({ t: T, v: this.val }); floater(this.x, this.y - 8, '+' + this.val); this.carry = null; }
       this.task = 'idle';
     });
   }
-  deposit() { // 餌を運ぶアリはフェロモンを残す
+  deposit() {
     if (this.carry !== 'food' || Math.hypot(this.x - this.lx, this.y - this.ly) < 9) return;
     this.lx = this.x; this.ly = this.y;
     if (this.y <= GROUND) trail.push({ x: this.x, y: this.y, s: 1 });
-    if (trail.length > 1200) trail.shift();
+    if (trail.length > 3500) trail.shift();
   }
-  pickFood(it) {
-    it.trips--; this.carry = 'food'; this.val = it.val; this.lx = this.x; this.ly = this.y;
-    this.goHome();
-  }
+  pickFood(it) { it.trips--; this.carry = 'food'; this.val = it.val; this.lx = this.x; this.ly = this.y; this.goHome(); }
   scoutCheck() {
     if (this.y > GROUND) return;
-    for (const it of items) if (it.trips > 0 && Math.abs(it.x - this.x) < 26) { this.route = []; this.cb = null; this.pickFood(it); return; }
+    const rad = 26 + 8 * (state.antLevel - 1);
+    for (const it of items) if (it.trips > 0 && Math.abs(it.x - this.x) < rad) { this.route = []; this.cb = null; this.pickFood(it); return; }
   }
   update(dt) {
     if (this.phase !== 'adult') { this.grow(dt); return; }
@@ -339,7 +355,7 @@ class Ant {
     if (this.digging > 0) { this.digging -= dt; if (this.digging <= 0) this.digDone(); return; }
     if (this.chase) { this.fight(dt); return; }
     if (this.route.length) {
-      if ((this.task === 'scout' || this.task === 'toFood') && !canGoOut()) { // 夜・雨なら引き返す
+      if ((this.task === 'scout' || this.task === 'toFood') && !canGoOut()) {
         const under = this.y > SURF + 1;
         this.route = []; this.cb = null; this.task = 'idle';
         if (!under) this.goHome();
@@ -356,21 +372,17 @@ class Ant {
     this.think();
   }
   think() {
-    const out = canGoOut();
-    if (this.type === 'forager' && out) {
+    if (this.type === 'forager' && canGoOut()) {
       const cands = items.filter(i => i.trips > 0 && followable(i));
-      if (cands.length) { // フェロモンをたどって餌場へ
-        const it = cands[Math.random() * cands.length | 0];
-        this.task = 'toFood';
-        this.go(this.outPts().concat([{ x: it.x + (Math.random() - .5) * 10, y: SURF }]), () => {
-          if (it.trips > 0) this.pickFood(it); else this.goHome();
-        });
+      if (cands.length) {
+        const it = cands[Math.random() * cands.length | 0]; this.task = 'toFood';
+        this.go(this.outPts().concat([{ x: it.x + (Math.random() - .5) * 10, y: this.sy() }]), () => { if (it.trips > 0) this.pickFood(it); else this.goHome(); });
         return;
       }
-      if (items.some(i => i.trips > 0) && Math.random() < 0.5) { // 手がかりなし→探索
+      if (items.some(i => i.trips > 0) && Math.random() < 0.5) {
         this.task = 'scout';
         const dir = Math.random() < .5 ? -1 : 1, pts = this.outPts(); let x = 0;
-        for (let i = 0; i < 4; i++) { x = clamp(x + dir * (80 + Math.random() * 120) * (Math.random() < .2 ? -1 : 1), -650, 650); pts.push({ x, y: SURF }); }
+        for (let i = 0; i < 6; i++) { x = clamp(x + dir * (150 + Math.random() * 280) * (Math.random() < .15 ? -1 : 1), -WORLD + 60, WORLD - 60); pts.push({ x, y: this.sy() }); }
         this.go(pts, () => this.goHome());
         return;
       }
@@ -383,11 +395,7 @@ class Ant {
         return;
       }
     }
-    if (this.type === 'soldier' && fightTarget(this)) {
-      this.task = 'fight';
-      this.go(this.outPts(), () => { this.chase = true; });
-      return;
-    }
+    if (this.type === 'soldier' && fightTarget(this)) { this.task = 'fight'; this.go(this.outPts(), () => { this.chase = true; }); return; }
     if (this.tryCarry()) return;
     this.wander();
   }
@@ -395,12 +403,11 @@ class Ant {
     const d = this.dg; digStep(d);
     this.carry = 'dirt'; this.task = 'haul';
     const side = Math.random() < .5 ? -1 : 1;
-    this.go(nodePts(path(this.node, entrance)).concat([{ x: side * (12 + Math.random() * 12), y: SURF }]), () => {
-      state.mound++; this.carry = null; d.busy = false; this.dg = null;
-      this.goHome(d.node);
+    this.go(nodePts(path(this.node, entrance)).concat([{ x: side * (12 + Math.random() * 12), y: this.sy() }]), () => {
+      state.mound++; this.carry = null; d.busy = false; this.dg = null; this.goHome(d.node);
     });
   }
-  tryCarry() { // 卵を保育室へ運ぶ
+  tryCarry() {
     const nurs = nestNodes.filter(n => n.type === 'NURSERY');
     if (!nurs.length) return false;
     const e = ants.find(a => a.phase === 'egg' && !a.moved && !a.carrier && !a.claimed);
@@ -429,9 +436,7 @@ class Ant {
     const t = fightTarget(this);
     if (!t || t.hp <= 0) { this.chase = false; this.goHome(); return; }
     const tx = t.x + Math.cos(this.id * 2.4) * (t.isBoss ? 18 : 10), ty = SURF - (this.id % 4) * 3;
-    if (this.walk(tx, ty, dt, this.speed() * 1.3) === 0) {
-      t.hp -= 5 * dt; this.angle = Math.atan2(GROUND - this.y, t.x - this.x); this.legT += dt * 14;
-    }
+    if (this.walk(tx, ty, dt, this.speed() * 1.3) === 0) { t.hp -= 5 * state.dmgMult * dt; this.angle = Math.atan2(GROUND - this.y, t.x - this.x); this.legT += dt * 14; }
   }
 }
 
@@ -442,26 +447,24 @@ function ell(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 6.2
 function drawAnt(c, x, y, ang, s, color, legT, o) {
   o = o || {};
   c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s);
-  c.strokeStyle = color; c.globalAlpha = 0.85; c.lineWidth = 1;
-  c.beginPath();
-  for (let i = 0; i < 3; i++) { const lx = -1 + i * 2.2; for (const sd of [-1, 1]) { const ph = Math.sin(legT + i * 2.1 + (sd > 0 ? Math.PI : 0)) * 2; c.moveTo(lx, 0); c.lineTo(lx + ph, sd * 5.5); } }
-  c.moveTo(6, -1); c.lineTo(10, -3); c.moveTo(6, 1); c.lineTo(10, 3);
+  c.strokeStyle = color; c.globalAlpha = 0.8; c.lineWidth = 0.9; c.beginPath();
+  for (let i = 0; i < 3; i++) { const lx = -1 + i * 2.2; for (const sd of [-1, 1]) { const ph = Math.sin(legT + i * 2.1 + (sd > 0 ? Math.PI : 0)) * 2; c.moveTo(lx, 0); c.lineTo(lx + ph - 1, sd * 3); c.lineTo(lx + ph + 1.5, sd * 6); } }
+  c.moveTo(6, -1); c.lineTo(9, -2.5); c.lineTo(11, -2); c.moveTo(6, 1); c.lineTo(9, 2.5); c.lineTo(11, 2);
   c.stroke(); c.globalAlpha = 1;
   c.fillStyle = color;
-  ell(c, -6.5, 0, o.big ? 8 : 5, o.big ? 4.8 : 3.3); // 腹部
-  ell(c, 0.5, 0, 3, 2.3);                              // 胸部
-  ell(c, 5, 0, o.head ? 4.2 : 3, o.head ? 3.6 : 2.7);  // 頭部
-  if (o.head) { c.strokeStyle = '#fff'; c.beginPath(); c.moveTo(8, -2); c.lineTo(10.5, -1); c.moveTo(8, 2); c.lineTo(10.5, 1); c.stroke(); }
+  ell(c, -6.5, 0, o.big ? 8 : 5, o.big ? 4.8 : 3.3); ell(c, 0.5, 0, 3, 2.3); ell(c, 5, 0, o.head ? 4.2 : 3, o.head ? 3.6 : 2.7);
+  c.fillStyle = 'rgba(255,255,255,.28)'; ell(c, -7, -1.1, o.big ? 4 : 2.4, 1); ell(c, 0.5, -.8, 1.6, .7);
+  c.fillStyle = 'rgba(0,0,0,.45)'; ell(c, 6.3, -1, .7, .7); ell(c, 6.3, 1, .7, .7);
+  if (o.head) { c.strokeStyle = '#fff'; c.lineWidth = .9; c.beginPath(); c.moveTo(8, -2); c.lineTo(10.5, -1); c.moveTo(8, 2); c.lineTo(10.5, 1); c.stroke(); }
   if (o.carry === 'food') { c.fillStyle = '#aed581'; ell(c, 9, 0, 2.6, 1.7); }
   else if (o.carry === 'dirt') { c.fillStyle = '#8d6e63'; ell(c, 9, 0, 2.2, 2.2); }
   else if (o.carry === 'egg') { c.fillStyle = '#fff'; ell(c, 9, 0, 2.2, 3); }
   c.restore();
 }
 function drawBrood(c, a) {
-  let x = a.x, y = a.y;
-  if (a.carrier) { x = a.carrier.x + Math.cos(a.carrier.angle) * 0; y = a.carrier.y; return; }
-  c.save(); c.translate(x, y);
-  if (a.phase === 'egg') { c.fillStyle = '#fff'; ell(c, 0, 0, 2.5, 3.5); }
+  if (a.carrier) return;
+  c.save(); c.translate(a.x, a.y);
+  if (a.phase === 'egg') { c.fillStyle = '#fffaf0'; ell(c, 0, 0, 2.5, 3.5); c.fillStyle = 'rgba(255,255,255,.7)'; ell(c, -.7, -1, .8, 1.2); }
   else if (a.phase === 'larva') {
     const w = Math.sin(T * 3 + a.id) * 0.25;
     c.strokeStyle = a.hungry ? '#ffab91' : '#fff3c4'; c.lineWidth = 4; c.lineCap = 'round';
@@ -474,116 +477,125 @@ const mixc = (a, b, k) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k))
 const hash = (i, j) => (((i * 73856093) ^ (j * 19349663)) >>> 0);
 
 // ==========================================
-// カメラ操作
+// カメラ(パン・ズーム・ミニマップ)
 // ==========================================
-const canvas = $('nest-canvas'), ctx = canvas.getContext('2d'), container = $('nest-container');
-let camX = 0, camY = 0, isDragging = false, dsx = 0, dsy = 0;
-function resizeCanvas() { canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
-resizeCanvas();
-camX = canvas.width / 2; camY = Math.min(320, canvas.height * 0.62);
-window.addEventListener('resize', resizeCanvas);
-const pDown = (x, y) => { isDragging = true; dsx = x - camX; dsy = y - camY; };
-const pMove = (x, y) => { if (isDragging) { camX = x - dsx; camY = y - dsy; } };
-canvas.addEventListener('mousedown', e => pDown(e.clientX, e.clientY));
-canvas.addEventListener('mousemove', e => pMove(e.clientX, e.clientY));
-window.addEventListener('mouseup', () => isDragging = false);
-canvas.addEventListener('touchstart', e => { e.preventDefault(); pDown(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
-canvas.addEventListener('touchmove', e => { e.preventDefault(); pMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
-window.addEventListener('touchend', () => isDragging = false);
+const canvas = $('nest-canvas'), ctx = canvas.getContext('2d'), stage = $('stage'), mini = $('mini'), mctx = mini.getContext('2d');
+let W = 400, H = 400, D = 1, camX = 0, camY = 0, z = 1;
+function resize() {
+  D = Math.min(2, window.devicePixelRatio || 1); W = stage.clientWidth; H = stage.clientHeight;
+  canvas.width = W * D; canvas.height = H * D;
+}
+function clampCam() {
+  camX = clamp(camX, W - (WORLD + 200) * z, (WORLD + 200) * z);
+  const hi = H * 0.95 + 200 * z, lo = Math.min(H - 3300 * z, hi);
+  camY = clamp(camY, lo, hi);
+}
+function zoomAt(px, py, nz) { nz = clamp(nz, 0.12, 2.5); camX = px - (px - camX) * nz / z; camY = py - (py - camY) * nz / z; z = nz; clampCam(); }
+function viewSurface() { camX = W / 2; camY = H * 0.6 + 200 * z; clampCam(); }
+function viewFit() { z = clamp((W - 16) / (2 * (WORLD + 100)), 0.12, 2.5); camX = W / 2; camY = H * 0.62 + 200 * z; clampCam(); }
+function viewUnder() { camX = W / 2; camY = H * 0.3; clampCam(); }
+resize(); z = 0.9; viewSurface();
+window.addEventListener('resize', () => { resize(); clampCam(); });
+
+const ptrs = new Map(); let pinch = null;
+canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); pinch = null; });
+canvas.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  if (ptrs.size === 1) { camX += dx; camY += dy; }
+  else if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), r = canvas.getBoundingClientRect();
+    if (pinch) zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, z * d / pinch);
+    pinch = d;
+  }
+  clampCam();
+});
+const endP = e => { ptrs.delete(e.pointerId); pinch = null; };
+canvas.addEventListener('pointerup', endP); canvas.addEventListener('pointercancel', endP);
+canvas.addEventListener('wheel', e => { e.preventDefault(); const r = canvas.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, z * (e.deltaY < 0 ? 1.12 : 0.89)); }, { passive: false });
+$('z-in').onclick = () => zoomAt(W / 2, H / 2, z * 1.3);
+$('z-out').onclick = () => zoomAt(W / 2, H / 2, z / 1.3);
+$('v-fit').onclick = viewFit;
+let underView = false;
+$('v-toggle').onclick = () => { underView = !underView; if (z < 0.4) z = 0.9; underView ? viewUnder() : viewSurface(); };
+function miniJump(e) { const r = mini.getBoundingClientRect(), wx = ((e.clientX - r.left) / r.width - 0.5) * 2 * (WORLD + 100); camX = W / 2 - wx * z; clampCam(); }
+mini.addEventListener('pointerdown', e => { mini.setPointerCapture(e.pointerId); miniJump(e); });
+mini.addEventListener('pointermove', e => { if (e.buttons) miniJump(e); });
 
 // ==========================================
 // UI
 // ==========================================
-const rate = (log, sec) => { const w = Math.min(sec, Math.max(T, 1)); return log.filter(e => (e.t === undefined ? e : e.t) > T - sec).reduce((s, e) => s + (e.v === undefined ? 1 : e.v), 0) / w; };
-function updateUI() {
-  const pending = state.orders.miner + state.orders.forager + state.orders.soldier + ants.filter(a => a.phase !== 'adult').length;
-  const inc = rate(incomeLog, 20);
-  $('food').innerText = Math.floor(state.food).toLocaleString();
-  $('fps').innerText = inc.toFixed(1); $('food-power').innerText = inc.toFixed(1);
-  $('click-power').innerText = state.jawLevel.toLocaleString();
-  $('dig-power').innerText = Math.round(rate(digLog, 60) * 60);
-  $('combat-power').innerText = (state.soldiers * 5).toLocaleString();
-  $('total-ants').innerText = (1 + state.miners + state.foragers + state.soldiers).toLocaleString();
-  $('total-larvae').innerText = pending.toLocaleString();
-  $('nest-size').innerText = state.nestSize.toLocaleString();
-  for (const t of ['miner', 'forager', 'soldier']) {
-    $(t + '-count').innerText = state[t + 's']; $(t + '-queue').innerText = state.orders[t];
-    $(t + '-cost').innerText = state.costs[t].toLocaleString();
-  }
-  $('jaw-level').innerText = state.jawLevel; $('claw-level').innerText = state.clawLevel;
-  $('jaw-cost').innerText = state.costs.jaw.toLocaleString(); $('claw-cost').innerText = state.costs.claw.toLocaleString();
-  const s = season();
-  $('env-info').innerText = `${isNight() ? '🌙 夜' : '☀️ 昼'} / ${s.n}${env.raining ? ' / 🌧️ 雨' : ''}`;
-  const hungry = ants.filter(a => a.hungry).length, al = [];
-  if (rivals.length) al.push('⚠️ 他コロニーが侵入中');
-  if (hungry) al.push(`🍼 空腹の幼虫 ${hungry}匹`);
-  if (env.msgT > 0) al.push(env.msg);
-  $('alert-info').innerHTML = al.join('<br>');
-  [['btn-miner', 'miner'], ['btn-forager', 'forager'], ['btn-soldier', 'soldier'], ['btn-jaw', 'jaw'], ['btn-claw', 'claw']].forEach(([id, k]) => {
-    $(id).classList.toggle('opacity-50', state.food < state.costs[k]);
-    $(id).classList.toggle('grayscale', state.food < state.costs[k]);
-  });
-  updateBattleUI();
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + b.dataset.tab));
+});
+['miner', 'forager', 'soldier'].forEach(k => $('s-' + k).addEventListener('input', e => { state.target[k] = +e.target.value; }));
+function upgrade(key, field, mult, fn) {
+  $('btn-' + key).onclick = () => {
+    if (state.food < state.costs[key]) return;
+    state.food -= state.costs[key]; state[field]++; state.costs[key] = Math.floor(state.costs[key] * mult); fn(); updateUI();
+  };
 }
-function updateBattleUI() {
-  const panel = $('battle-panel');
-  if (state.enemyIndex >= ENEMIES.length) { panel.innerHTML = "<div class='text-white font-bold py-4'>地上を完全に制圧した！👑</div>"; return; }
-  const e = ENEMIES[state.enemyIndex], hp = boss ? Math.max(0, Math.ceil(boss.hp)) : e.hp;
-  $('enemy-emoji').innerText = e.emoji; $('enemy-name').innerText = e.name;
-  $('enemy-hp-text').innerText = `${hp} / ${e.hp}`; $('enemy-reward').innerText = e.reward.toLocaleString();
-  $('enemy-hp-bar').style.width = (hp / e.hp * 100) + '%';
-  const btn = $('btn-battle');
-  btn.classList.toggle('hidden', state.inBattle); $('battle-status').classList.toggle('hidden', !state.inBattle);
-  const ok = state.soldiers > 0;
-  btn.classList.toggle('opacity-50', !ok); btn.classList.toggle('cursor-not-allowed', !ok); btn.disabled = !ok;
-}
-$('btn-battle').addEventListener('click', () => {
+upgrade('claw', 'clawLevel', 3, () => state.minerMult *= 2);
+upgrade('mand', 'mandLevel', 2.5, () => state.dmgMult *= 1.5);
+upgrade('ant', 'antLevel', 2.2, () => {});
+$('btn-battle').onclick = () => {
   if (state.soldiers > 0 && !state.inBattle && state.enemyIndex < ENEMIES.length) {
     const e = ENEMIES[state.enemyIndex];
-    boss = { x: (Math.random() < .5 ? -1 : 1) * (200 + Math.random() * 100), y: GROUND, hp: e.hp, max: e.hp, emoji: e.emoji, isBoss: true };
+    boss = { x: (Math.random() < .5 ? -1 : 1) * (300 + Math.random() * 400), y: GROUND, hp: e.hp, max: e.hp, emoji: e.emoji, isBoss: true };
     state.inBattle = true; updateUI();
   }
-});
-
-function buy(key, onBuy, mult) {
-  if (state.food >= state.costs[key]) { state.food -= state.costs[key]; onBuy(); state.costs[key] = Math.floor(state.costs[key] * mult); updateUI(); }
+};
+const S = (id, v) => { const el = $(id); if (el.textContent !== String(v)) el.textContent = v; };
+let lastToast = '';
+function updateUI() {
+  const brood = ants.filter(a => a.phase !== 'adult').length, hungry = ants.filter(a => a.hungry).length;
+  const adults = state.miners + state.foragers + state.soldiers, cap = popCap();
+  const inc = incomeLog.filter(e => e.t > T - 20).reduce((s, e) => s + e.v, 0) / Math.min(20, Math.max(T - 15, 5));
+  const dig = digLog.filter(t => t > T - 60).length * 60 / Math.min(60, Math.max(T - 15, 10));
+  S('h-food', Math.floor(state.food).toLocaleString()); S('h-rate', `+${inc.toFixed(1)}/s`);
+  S('h-pop', adults + brood); S('h-cap', `/ ${cap}`); S('h-nest', state.nestSize.toLocaleString());
+  const hr = (6 + dayPhase() * 24) % 24, hh = Math.floor(hr), mm = Math.floor((hr - hh) * 60 / 10) * 10;
+  S('h-clock', `${isNight() ? '🌙' : '☀️'} ${hh}:${String(mm).padStart(2, '0')}`);
+  S('h-env', `${Math.floor(T / DAY) + 1}日目 ${season().n}${env.raining ? ' 🌧️' : ''}`);
+  S('pop-n', adults + brood); S('pop-cap', cap); $('pop-bar').style.width = clamp((adults + brood) / cap * 100, 0, 100) + '%';
+  const sum = state.target.miner + state.target.forager + state.target.soldier || 1;
+  for (const k of ['miner', 'forager', 'soldier']) { S('c-' + k, state[k + 's']); S('p-' + k, Math.round(state.target[k] / sum * 100) + '%'); }
+  S('st-dig', Math.round(dig)); S('st-food', inc.toFixed(1)); S('st-comb', Math.round(state.soldiers * 5 * state.dmgMult));
+  S('st-brood', brood); S('st-hungry', hungry); S('st-mound', state.mound);
+  for (const k of ['claw', 'mand', 'ant']) { S('lv-' + k, state[k + 'Level']); S('cost-' + k, state.costs[k].toLocaleString()); $('btn-' + k).classList.toggle('dis', state.food < state.costs[k]); }
+  // 戦闘パネル
+  if (state.enemyIndex >= ENEMIES.length) { S('enemy-emoji', '👑'); S('enemy-name', '地上を完全に制圧した！'); $('btn-battle').classList.add('hidden'); }
+  else {
+    const e = ENEMIES[state.enemyIndex], hp = boss ? Math.max(0, Math.ceil(boss.hp)) : e.hp;
+    S('enemy-emoji', e.emoji); S('enemy-name', e.name); S('enemy-hp-text', `${hp} / ${e.hp}`); S('enemy-reward', e.reward.toLocaleString());
+    $('enemy-hp-bar').style.width = hp / e.hp * 100 + '%';
+    $('btn-battle').classList.toggle('hidden', state.inBattle); $('battle-status').classList.toggle('hidden', !state.inBattle);
+    $('btn-battle').disabled = state.soldiers < 1;
+  }
+  S('rival-status', rivals.length ? `⚠️ 他コロニーのアリ ${rivals.length}匹が侵入中` : '周囲は静かです');
+  const tj = toasts.map(t => t.msg).join('|');
+  if (tj !== lastToast) { lastToast = tj; $('toasts').innerHTML = toasts.map(t => `<div class="toast">${t.msg}</div>`).join(''); }
 }
-$('btn-miner').onclick = () => buy('miner', () => state.orders.miner++, 1.15);
-$('btn-forager').onclick = () => buy('forager', () => state.orders.forager++, 1.15);
-$('btn-soldier').onclick = () => buy('soldier', () => state.orders.soldier++, 1.15);
-$('btn-jaw').onclick = () => buy('jaw', () => state.jawLevel++, 2.5);
-$('btn-claw').onclick = () => buy('claw', () => { state.clawLevel++; state.minerMult *= 2; }, 3);
-
-function createFloatingText(x, y, text) {
-  const el = document.createElement('div');
-  el.className = 'floating-text text-xl md:text-2xl'; el.innerText = text;
-  el.style.left = (x - 10) + 'px'; el.style.top = (y - 20) + 'px';
-  document.body.appendChild(el); setTimeout(() => el.remove(), 800);
-}
-const handleTap = (x, y) => { state.food += state.jawLevel; updateUI(); createFloatingText(x, y, `+${state.jawLevel}`); };
-$('sugar-cube').addEventListener('mousedown', e => handleTap(e.clientX, e.clientY));
-$('sugar-cube').addEventListener('touchstart', e => { e.preventDefault(); handleTap(e.touches[0].clientX, e.touches[0].clientY); });
 
 // ==========================================
 // ゲーム更新
 // ==========================================
 function update(dt) {
   T += dt;
-  // 女王が予約順に産卵(1秒1個)
+  // 女王の産卵(食料・収容力・産卵間隔の制約あり)
   state.layT += dt;
-  if (state.layT >= 1) {
-    const t = ['miner', 'forager', 'soldier'].find(k => state.orders[k] > 0);
-    if (t) { state.orders[t]--; ants.push(new Ant(t, nestNodes[0])); state.layT = 0; }
-  }
+  const adults = state.miners + state.foragers + state.soldiers;
+  if (state.layT >= 6 / (1 + adults / 8) && ants.length < popCap() && state.food >= EGG_COST + RESERVE) { layEgg(); state.layT = 0; }
   // 雨と崩落
   if (!env.raining) { env.nextRain -= dt; if (env.nextRain <= 0) { env.raining = true; env.rainLeft = 20 + Math.random() * 15; env.collapseT = 6; } }
   else { env.rainLeft -= dt; env.collapseT -= dt; if (env.collapseT <= 0) { env.collapseT = 6; collapse(); } if (env.rainLeft <= 0) { env.raining = false; env.nextRain = 70 + Math.random() * 80; } }
   // 餌の出現
   env.nextFood -= dt;
-  if (env.nextFood <= 0) { env.nextFood = (6 + Math.random() * 6) * season().sv; if (items.length < 4) spawnItem(); }
+  if (env.nextFood <= 0) { env.nextFood = (6 + Math.random() * 6) * season().sv; if (items.length < 6) spawnItem(); }
   // 他コロニー
   env.nextRival -= dt;
-  if (env.nextRival <= 0 && !rivals.length && T > 150 && season().n !== '冬') { spawnRivals(); env.nextRival = 100 + Math.random() * 80; }
+  if (env.nextRival <= 0 && !rivals.length && T > 170 && season().n !== '冬') { spawnRivals(); env.nextRival = 100 + Math.random() * 80; }
   for (const r of rivals) {
     r.life -= dt;
     const it = items.find(i => i.trips > 0), tx = (r.life > 0 && it) ? it.x + (r.id % 5) * 6 : r.home, dx = tx - r.x;
@@ -591,25 +603,23 @@ function update(dt) {
     else if (r.life > 0 && it) it.trips -= 0.25 * dt;
   }
   const before = rivals.length;
-  rivals = rivals.filter(r => { if (r.hp <= 0) { env.rivalKills++; return false; } return !(r.life < 0 && Math.abs(r.x) > 700); });
+  rivals = rivals.filter(r => { if (r.hp <= 0) { env.rivalKills++; return false; } return !(r.life < 0 && Math.abs(r.x) > WORLD + 60); });
   if (before && !rivals.length && env.rivalWave) {
     env.rivalWave = false;
     if (env.rivalKills > 0) { const rw = 60 + env.rivalKills * 15; state.food += rw; notify(`🛡️ 縄張りを守った！ +${rw}🍃`); }
   }
   items = items.filter(i => i.trips > 0);
-  // フェロモンの蒸発
-  for (const t of trail) t.s -= 0.015 * dt;
+  const decay = 0.015 * Math.pow(0.7, state.antLevel - 1);
+  for (const t of trail) t.s -= decay * dt;
   if (Math.random() < dt * 2) trail = trail.filter(t => t.s > 0);
-  // 外敵討伐
   if (boss && boss.hp <= 0) {
     const e = ENEMIES[state.enemyIndex]; state.food += e.reward;
-    floater(boss.x, GROUND - 30, `討伐成功! +${e.reward}🍃`);
+    floater(boss.x, GROUND - 30, `討伐成功! +${e.reward}🍃`); notify(`⚔️ ${e.name}を討伐！ +${e.reward.toLocaleString()}🍃`);
     boss = null; state.inBattle = false; state.enemyIndex++;
   }
   ants.forEach(a => a.update(dt));
-  floaters.forEach(f => { f.t -= dt; f.y -= 18 * dt; });
-  floaters = floaters.filter(f => f.t > 0);
-  if (env.msgT > 0) env.msgT -= dt;
+  floaters.forEach(f => { f.t -= dt; f.y -= 18 * dt; }); floaters = floaters.filter(f => f.t > 0);
+  toasts.forEach(t => t.t -= dt); toasts = toasts.filter(t => t.t > 0);
   while (incomeLog.length && incomeLog[0].t < T - 60) incomeLog.shift();
   while (digLog.length && digLog[0] < T - 90) digLog.shift();
 }
@@ -617,99 +627,140 @@ function update(dt) {
 // ==========================================
 // 描画
 // ==========================================
+function ridge(gy, col, amp, freq, par, ph) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, gy);
+  for (let x = 0; x <= W + 8; x += 8) { const u = (x + camX * par) * freq + ph; ctx.lineTo(x, gy - amp * (0.55 + 0.3 * Math.sin(u) + 0.15 * Math.sin(u * 2.7 + 1))); }
+  ctx.lineTo(W, gy); ctx.fill();
+}
 function draw() {
-  const W = canvas.width, H = canvas.height, L = light() * (env.raining ? 0.75 : 1), gy = GROUND + camY;
-  ctx.fillStyle = '#4e342e'; ctx.fillRect(0, 0, W, H);
+  const L = light() * (env.raining ? 0.75 : 1), gy = GROUND * z + camY, s = season(), k = clamp((L - 0.15) / 0.85, 0, 1);
+  ctx.setTransform(D, 0, 0, D, 0, 0);
+  // 地中(深さで色が変わる土層)
+  const top = clamp(gy, 0, H), sg = ctx.createLinearGradient(0, top, 0, top + 1800 * z);
+  sg.addColorStop(0, '#6a4a37'); sg.addColorStop(0.35, '#52372a'); sg.addColorStop(1, '#2a1a14');
+  ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
   // 空
   if (gy > 0) {
-    const k = clamp((L - 0.15) / 0.85, 0, 1), sh = Math.min(gy, H);
-    const g = ctx.createLinearGradient(0, 0, 0, gy);
-    g.addColorStop(0, mixc([11, 16, 40], [96, 190, 250], k)); g.addColorStop(1, mixc([28, 34, 66], [196, 232, 255], k));
+    const sh = Math.min(gy, H), g = ctx.createLinearGradient(0, 0, 0, gy);
+    g.addColorStop(0, mixc([9, 13, 34], [74, 163, 240], k)); g.addColorStop(1, mixc([26, 32, 62], [190, 228, 255], k));
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, sh);
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, sh); ctx.clip();
-    if (L < 0.6) { ctx.fillStyle = `rgba(255,255,255,${0.6 - L})`; for (let i = 0; i < 40; i++) ctx.fillRect((hash(i, 7) % 1000) / 1000 * W, (hash(i, 13) % 1000) / 1000 * gy * 0.8, 1.5, 1.5); }
-    const p = dayPhase(), day = p < 0.6, q = day ? p / 0.6 : (p - 0.6) / 0.4;
-    ctx.fillStyle = day ? '#fff176' : '#eceff1';
-    ctx.beginPath(); ctx.arc(W * q, gy - Math.sin(Math.PI * q) * gy * 0.75 - 10, day ? 16 : 12, 0, 6.283); ctx.fill();
+    if (L < 0.6) { ctx.fillStyle = `rgba(255,255,255,${0.7 - L})`; for (let i = 0; i < 50; i++) ctx.fillRect((hash(i, 7) % 1000) / 1000 * W, (hash(i, 13) % 1000) / 1000 * gy * 0.85, 1.5, 1.5); }
+    const p = dayPhase(), day = p < 0.6, q = day ? p / 0.6 : (p - 0.6) / 0.4, sx = W * q, sy = gy - Math.sin(Math.PI * q) * gy * 0.75 - 10;
+    const glow = ctx.createRadialGradient(sx, sy, 2, sx, sy, 60); glow.addColorStop(0, day ? 'rgba(255,240,170,.55)' : 'rgba(210,225,255,.3)'); glow.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = glow; ctx.fillRect(sx - 60, sy - 60, 120, 120);
+    ctx.fillStyle = day ? '#fff4b0' : '#eef3ff'; ctx.beginPath(); ctx.arc(sx, sy, day ? 15 : 11, 0, 6.283); ctx.fill();
+    ctx.fillStyle = `rgba(255,255,255,${0.15 + 0.5 * L})`;
+    for (let i = 0; i < 7; i++) { const cx = ((hash(i, 5) % 1000) / 1000 * (W + 300) + T * (4 + i) - camX * 0.12) % (W + 300) - 150, cy = gy * (0.12 + (i % 3) * 0.17), cw = 30 + (i % 4) * 14; ell(ctx, cx, cy, cw, cw * 0.28); ell(ctx, cx + cw * .5, cy - cw * .12, cw * .6, cw * .24); }
+    const mt = (a, b) => mixc(a, b, k);
+    ridge(gy, mt([18, 24, 44], [138, 168, 190]), 90 * Math.min(1, z + 0.4), 0.004, 0.25, 1);
+    ridge(gy, mt([14, 24, 28], [96, 140, 110]), 50 * Math.min(1, z + 0.4), 0.007, 0.5, 4);
     if (env.raining) {
-      ctx.strokeStyle = 'rgba(180,200,255,.5)'; ctx.beginPath();
-      for (let i = 0; i < 90; i++) { const x = (i * 137.5 + T * 60) % W, y = (i * 53.3 + T * 500) % Math.max(gy, 1); ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 10); }
+      ctx.strokeStyle = 'rgba(190,210,255,.5)'; ctx.beginPath();
+      for (let i = 0; i < 110; i++) { const x = (i * 137.5 + T * 60) % W, y = (i * 53.3 + T * 520) % Math.max(gy, 1); ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 11); }
       ctx.stroke();
     }
     ctx.restore();
   }
-  // ワールド
-  ctx.save(); ctx.translate(camX, camY);
-  const left = -camX, right = W - camX, top = -camY, bottom = H - camY;
-  ctx.fillStyle = 'rgba(0,0,0,.18)';
-  for (let ix = Math.floor(left / 60); ix <= Math.floor(right / 60); ix++) {
-    for (let iy = Math.floor(Math.max(top, GROUND) / 60); iy <= Math.floor(bottom / 60); iy++) {
-      const h = hash(ix, iy); if (h % 3) continue;
-      ctx.beginPath(); ctx.arc(ix * 60 + h % 50, iy * 60 + (h >> 8) % 50, 2 + (h >> 16) % 3, 0, 6.283); ctx.fill();
-    }
+  // ワールド座標
+  ctx.setTransform(D * z, 0, 0, D * z, D * camX, D * camY);
+  const left = -camX / z, right = (W - camX) / z, tp = -camY / z, bt = (H - camY) / z;
+  ctx.fillStyle = 'rgba(0,0,0,.2)';
+  for (let ix = Math.floor(left / 60); ix <= Math.floor(right / 60); ix++) for (let iy = Math.floor(Math.max(tp, GROUND) / 60); iy <= Math.floor(bt / 60); iy++) {
+    const h = hash(ix, iy); if (h % 3) continue;
+    ctx.beginPath(); ctx.arc(ix * 60 + h % 50, iy * 60 + (h >> 8) % 50, 2 + (h >> 16) % 4, 0, 6.283); ctx.fill();
   }
-  // トンネル
-  ctx.lineWidth = 16; ctx.lineCap = 'round'; ctx.strokeStyle = NODE_TYPES.TUNNEL.color; ctx.beginPath();
+  // 木・岩(奥)
+  for (let ix = Math.floor(left / 110); ix <= Math.floor(right / 110); ix++) {
+    const h = hash(ix, 11), x = ix * 110 + h % 60; if (Math.abs(x) < 60 || Math.abs(x) > WORLD + 100) continue;
+    if (h % 5 < 2) {
+      const sz = 45 + h % 55;
+      ctx.fillStyle = '#4a3226'; ctx.fillRect(x - 3, GROUND - sz, 6, sz);
+      if (s.leaf) { ctx.fillStyle = s.leaf; for (const [dx, dy, r] of [[0, -sz, sz * .38], [-sz * .25, -sz * .8, sz * .28], [sz * .25, -sz * .8, sz * .28]]) { ctx.beginPath(); ctx.arc(x + dx, GROUND + dy, r, 0, 6.283); ctx.fill(); } }
+      else { ctx.strokeStyle = '#5b4336'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, GROUND - sz * .6); ctx.lineTo(x - 14, GROUND - sz); ctx.moveTo(x, GROUND - sz * .7); ctx.lineTo(x + 14, GROUND - sz * .95); ctx.stroke(); }
+    } else if (h % 5 === 3) { ctx.fillStyle = '#7b7773'; ell(ctx, x, GROUND - 2, 8 + h % 9, 5 + h % 4); ctx.fillStyle = 'rgba(255,255,255,.15)'; ell(ctx, x - 2, GROUND - 5, 4, 2); }
+  }
+  // トンネル(縁取り → 内側)
+  ctx.lineCap = 'round'; ctx.beginPath();
   for (let i = 1; i < nestNodes.length; i++) { const n = nestNodes[i]; if (n.parent) { ctx.moveTo(n.x, n.y); ctx.lineTo(n.parent.x, n.parent.y); } }
-  ctx.stroke();
+  ctx.lineWidth = 21; ctx.strokeStyle = 'rgba(30,18,12,.55)'; ctx.stroke();
+  ctx.lineWidth = 16; ctx.strokeStyle = NODE_TYPES.TUNNEL.color; ctx.stroke();
   // 部屋
   const leaves = Math.min(6, Math.floor(Math.log10(state.food + 1) * 2));
   for (const n of nestNodes) {
-    if (n.type === 'ENTRANCE' || n.x + n.r < left || n.x - n.r > right || n.y + n.r < top || n.y - n.r > bottom) continue;
-    ctx.fillStyle = NODE_TYPES[n.type].color; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.283); ctx.fill();
-    if (n.type === 'STORAGE') { ctx.font = '10px sans-serif'; for (let i = 0; i < leaves; i++) ctx.fillText(i % 2 ? '🍂' : '🍃', n.x - 14 + (i * 13) % 26, n.y - 6 + (i * 7) % 14); }
+    if (n.type === 'ENTRANCE' || n.x + n.r < left || n.x - n.r > right || n.y + n.r < tp || n.y - n.r > bt) continue;
+    const rg = ctx.createRadialGradient(n.x, n.y - n.r * .2, n.r * .1, n.x, n.y, n.r);
+    rg.addColorStop(0, NODE_TYPES[n.type].color); rg.addColorStop(1, 'rgba(18,10,7,1)');
+    ctx.fillStyle = 'rgba(30,18,12,.55)'; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3, 0, 6.283); ctx.fill();
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.283); ctx.fill();
+    if (n.type === 'STORAGE') { ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; for (let i = 0; i < leaves; i++) ctx.fillText(i % 2 ? '🍂' : '🍃', n.x - 14 + (i * 13) % 26, n.y - 6 + (i * 7) % 14); }
   }
-  // 地表(草・巣口・土の山)
-  const s = season();
-  ctx.fillStyle = s.c; ctx.fillRect(left, GROUND - 4, right - left, 6);
+  // 地表
+  ctx.fillStyle = s.c; ctx.fillRect(left, GROUND - 4, right - left, 7);
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(left, GROUND + 2, right - left, 3);
   ctx.strokeStyle = s.c; ctx.lineWidth = 1; ctx.beginPath();
-  for (let x = Math.floor(left / 8) * 8; x < right; x += 8) { const h = hash(x, 3); ctx.moveTo(x, GROUND - 3); ctx.lineTo(x + (h % 5) - 2, GROUND - 9 - (h % 7)); }
+  for (let x = Math.floor(left / 7) * 7; x < right; x += 7) { const h = hash(x, 3); ctx.moveTo(x, GROUND - 3); ctx.lineTo(x + (h % 5) - 2, GROUND - 8 - (h % 8)); }
   ctx.stroke();
+  if (s.n === '春' || s.n === '夏') for (let x = Math.floor(left / 23) * 23; x < right; x += 23) { const h = hash(x, 9); if (h % 4) continue; ctx.fillStyle = ['#ffeb3b', '#fff', '#f48fb1', '#ce93d8'][h % 4 + (h >> 4) % 3 & 3]; ctx.beginPath(); ctx.arc(x, GROUND - 7 - h % 5, 1.8, 0, 6.283); ctx.fill(); }
   const mh = Math.min(46, Math.sqrt(state.mound) * 5 + 2);
-  ctx.fillStyle = '#6d4c41';
-  for (const sx of [-24, 24]) { ctx.beginPath(); ctx.ellipse(sx, GROUND - 2, 22, mh, 0, Math.PI, 2 * Math.PI); ctx.fill(); }
-  ctx.fillStyle = '#1a0f0c'; ell(ctx, 0, GROUND - 1, 11, 4);
+  ctx.fillStyle = '#74503f'; for (const sx of [-24, 24]) { ctx.beginPath(); ctx.ellipse(sx, GROUND - 2, 22, mh, 0, Math.PI, 2 * Math.PI); ctx.fill(); }
+  ctx.fillStyle = '#140b08'; ell(ctx, 0, GROUND - 1, 11, 4);
   // フェロモン
-  for (const t of trail) { ctx.fillStyle = `rgba(255,235,59,${t.s * 0.6})`; ctx.fillRect(t.x - 1, t.y - 1, 2.4, 2.4); }
+  for (const t of trail) { if (t.x < left - 5 || t.x > right + 5) continue; ctx.fillStyle = `rgba(255,235,59,${t.s * 0.65})`; ctx.fillRect(t.x - 1, t.y - 1, 2.6, 2.6); }
   // 餌
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for (const it of items) { ctx.font = `${14 + Math.min(12, it.trips / 4)}px sans-serif`; ctx.fillText(it.e, it.x, GROUND - 12); }
-  // 外敵
+  for (const it of items) { ctx.fillStyle = 'rgba(0,0,0,.25)'; ell(ctx, it.x, GROUND - 2, 10, 2.5); ctx.font = `${15 + Math.min(14, it.trips / 3)}px sans-serif`; ctx.fillText(it.e, it.x, GROUND - 12); }
+  // 外敵・他コロニー
   if (boss) {
-    ctx.font = '36px sans-serif'; ctx.fillText(boss.emoji, boss.x, GROUND - 22);
-    ctx.fillStyle = '#3e2723'; ctx.fillRect(boss.x - 22, GROUND - 48, 44, 5);
-    ctx.fillStyle = '#ef4444'; ctx.fillRect(boss.x - 22, GROUND - 48, 44 * clamp(boss.hp / boss.max, 0, 1), 5);
+    ctx.font = '38px sans-serif'; ctx.fillText(boss.emoji, boss.x, GROUND - 24);
+    ctx.fillStyle = '#3e2723'; ctx.fillRect(boss.x - 24, GROUND - 52, 48, 5);
+    ctx.fillStyle = '#ef4444'; ctx.fillRect(boss.x - 24, GROUND - 52, 48 * clamp(boss.hp / boss.max, 0, 1), 5);
   }
   for (const r of rivals) drawAnt(ctx, r.x, r.y, r.ang, 1, BODY.rival, r.legT, { head: true });
   // 女王
-  if (nestNodes.length) {
-    const sc = 2.6 + Math.sin(T * 1.6) * 0.1;
-    drawAnt(ctx, 0, 0, Math.PI / 2, sc, BODY.queen, 0, { big: true });
-    ctx.font = '14px sans-serif'; ctx.fillText('👑', 0, -22);
-  }
+  drawAnt(ctx, 0, 0, Math.PI / 2, 2.6 + Math.sin(T * 1.6) * 0.1, BODY.queen, 0, { big: true });
+  ctx.font = '14px sans-serif'; ctx.fillText('👑', 0, -22);
   // 卵・幼虫・蛹 → 成虫
   for (const a of ants) if (a.phase !== 'adult') drawBrood(ctx, a);
   for (const a of ants) {
     if (a.phase !== 'adult') continue;
+    if (a.x < left - 20 || a.x > right + 20) continue;
     const sh = a.digging > 0 ? Math.sin(T * 40) * 1.2 : 0;
+    ctx.fillStyle = 'rgba(0,0,0,.2)'; if (a.y <= GROUND) ell(ctx, a.x, GROUND - 1, 6, 1.5);
     drawAnt(ctx, a.x + sh, a.y, a.angle, a.type === 'soldier' ? 1.15 : 1, BODY[a.type], a.legT, { head: a.type === 'soldier', carry: a.carry });
     if (a.digging > 0) { ctx.fillStyle = '#8d6e63'; ctx.fillRect(a.x + Math.cos(T * 20) * 6, a.y + Math.sin(T * 25) * 6, 2, 2); }
   }
-  // 運ばれている卵
-  for (const a of ants) if (a.carrier) { ctx.fillStyle = '#fff'; }
-  // 浮遊テキスト
   ctx.font = 'bold 12px sans-serif';
   for (const f of floaters) { ctx.globalAlpha = Math.min(1, f.t); ctx.fillStyle = '#ffeb3b'; ctx.fillText(f.txt, f.x, f.y); }
   ctx.globalAlpha = 1;
-  ctx.restore();
-  // 夜の暗がり(地表付近)
-  if (L < 1 && gy > -40) { ctx.fillStyle = `rgba(5,10,30,${(1 - L) * 0.4})`; ctx.fillRect(0, 0, W, Math.min(H, gy + 30)); }
+  // 夜の暗がり
+  ctx.setTransform(D, 0, 0, D, 0, 0);
+  if (L < 1 && gy > -40) { ctx.fillStyle = `rgba(4,8,28,${(1 - L) * 0.42})`; ctx.fillRect(0, 0, W, Math.min(H, gy + 30)); }
+  drawMini();
+}
+function drawMini() {
+  const w = mini.width, h = mini.height, X = x => (x / (WORLD + 100) / 2 + 0.5) * w;
+  mctx.clearRect(0, 0, w, h);
+  mctx.fillStyle = '#2b4a32'; mctx.fillRect(0, h * 0.62, w, h * 0.38);
+  mctx.fillStyle = 'rgba(255,235,59,.7)'; for (let i = 0; i < trail.length; i += 4) mctx.fillRect(X(trail[i].x), h * 0.58, 2, 3);
+  mctx.font = '16px sans-serif'; mctx.textAlign = 'center'; for (const it of items) mctx.fillText(it.e, X(it.x), h * 0.5);
+  mctx.fillStyle = '#e8675d'; for (const r of rivals) mctx.fillRect(X(r.x) - 3, h * 0.4, 6, 6);
+  if (boss) mctx.fillText(boss.emoji, X(boss.x), h * 0.32);
+  for (const a of ants) if (a.phase === 'adult' && a.y <= GROUND) { mctx.fillStyle = BODY[a.type]; mctx.fillRect(X(a.x) - 1.5, h * 0.62, 3, 4); }
+  mctx.fillStyle = '#ffb74d'; mctx.fillRect(X(0) - 3, h * 0.62, 6, 8);
+  const l = X(-camX / z), r = X((W - camX) / z);
+  mctx.strokeStyle = '#fff'; mctx.lineWidth = 2; mctx.strokeRect(clamp(l, 1, w - 3), 2, clamp(r - l, 4, w), h - 4);
 }
 
 // ==========================================
-// メインループ
+// 開始: 女王のそばに卵を1つ置いて、そこから帝国を築く
 // ==========================================
 initNest();
+{
+  const first = new Ant('forager', nestNodes[0]);
+  first.x = 46; first.y = 14; first.timer = 6;
+  ants.push(first);
+}
 let last = performance.now(), uiAcc = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
