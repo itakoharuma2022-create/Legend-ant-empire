@@ -117,9 +117,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </section>
 
     <section class="tab" id="tab-evolve">
-      <div class="card up"><div class="ic">🪨</div><div class="tx"><b>鋭利な爪 Lv<span id="lv-claw">1</span></b><small>掘削が2倍速、採掘アリの足も速くなる</small></div><button class="btn" id="btn-claw">🍃 <span id="cost-claw">300</span></button></div>
-      <div class="card up"><div class="ic">🦷</div><div class="tx"><b>強靭な大顎 Lv<span id="lv-mand">1</span></b><small>兵隊アリの攻撃力が1.5倍</small></div><button class="btn" id="btn-mand">🍃 <span id="cost-mand">200</span></button></div>
-      <div class="card up"><div class="ic">📡</div><div class="tx"><b>鋭敏な触角 Lv<span id="lv-ant">1</span></b><small>フェロモンが長持ちし、餌の発見範囲も広がる</small></div><button class="btn" id="btn-ant">🍃 <span id="cost-ant">150</span></button></div>
+      <div class="card"><h3>🧬 コロニー進化研究所</h3><p style="font-size:12px;color:var(--sub);line-height:1.7">食料を使って多様な進化を研究しよう。各進化は複数レベルまで強化可能。購入した進化はセーブデータに保存されます。</p><div class="info-grid"><div class="info-stat"><small>研究済み進化レベル合計</small><b id="evo-total-level">3</b></div><div class="info-stat"><small>研究項目</small><b id="evo-unlocked-count">0 / 30</b></div></div></div>
+      <div id="evolution-list"></div>
     </section>
 
     <section class="tab" id="tab-battle">
@@ -205,6 +204,7 @@ const state = {
   food: 5, nestSize: 200, miners: 0, foragers: 0, soldiers: 0,
   clawLevel: 1, mandLevel: 1, antLevel: 1, minerMult: 1, dmgMult: 1,
   costs: { claw: 300, mand: 200, ant: 150 },
+  evolutions: {},
   orders: { miner: 0, forager: 0, soldier: 0 },
   layT: 0, digCount: 0, mound: 0, inBattle: false, enemyIndex: 0
 };
@@ -724,7 +724,7 @@ function saveGame(){
 function loadGame(){
  try{
   const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const d=JSON.parse(raw);if(!d||d.version!==3)return false;
-  loadingSave=true;Object.assign(state,d.state||{});Object.assign(env,d.env||{});T=Number(d.T)||15;Object.assign(metrics,d.metrics||{});metrics.achievements=metrics.achievements||{};
+  loadingSave=true;Object.assign(state,d.state||{});state.evolutions=state.evolutions||{};Object.assign(env,d.env||{});T=Number(d.T)||15;Object.assign(metrics,d.metrics||{});metrics.achievements=metrics.achievements||{};
   nestNodes=[];activeDiggers=[];const nodes=d.nodes||[];
   for(const nd of nodes){const n=new NestNode(nd.x,nd.y,nd.type,null);n.r=nd.r;nestNodes.push(n);}
   nodes.forEach((nd,i)=>{if(nd.parent>=0&&nestNodes[nd.parent]){nestNodes[i].parent=nestNodes[nd.parent];nestNodes[nd.parent].children.push(nestNodes[i]);}});
@@ -774,9 +774,65 @@ function upgrade(key, field, mult, fn) {
     state.food -= state.costs[key]; state[field]++; state.costs[key] = Math.floor(state.costs[key] * mult); fn(); updateUI();
   };
 }
+const EVOLUTIONS = [
+ {id:'claw',icon:'🪨',name:'鋭利な爪',desc:'採掘効率が上昇',base:300,growth:1.8},
+ {id:'mand',icon:'🦷',name:'強靭な大顎',desc:'兵隊アリの攻撃力が上昇',base:200,growth:1.8},
+ {id:'ant',icon:'📡',name:'鋭敏な触角',desc:'餌の発見範囲が上昇',base:150,growth:1.7},
+ {id:'carapace',icon:'🛡️',name:'硬質外骨格',desc:'戦闘での耐久力が上昇',base:350,growth:1.9},
+ {id:'pheromone',icon:'💨',name:'フェロモン強化',desc:'採集アリの効率が上昇',base:250,growth:1.8},
+ {id:'enzyme',icon:'🧪',name:'消化酵素',desc:'食料の獲得量が上昇',base:400,growth:1.9},
+ {id:'mandible',icon:'⚔️',name:'二重大顎',desc:'戦闘力がさらに上昇',base:500,growth:2.0},
+ {id:'vision',icon:'👁️',name:'複眼の発達',desc:'探索能力が上昇',base:280,growth:1.8},
+ {id:'legs',icon:'🦵',name:'高速歩行脚',desc:'移動速度が上昇',base:320,growth:1.8},
+ {id:'memory',icon:'🧠',name:'記憶能力',desc:'餌場を見失いにくくなる',base:450,growth:1.9},
+ {id:'queen',icon:'👑',name:'女王の繁殖力',desc:'繁殖効率が上昇',base:600,growth:2.0},
+ {id:'brood',icon:'🥚',name:'幼虫育成術',desc:'幼虫の成長が速くなる',base:550,growth:1.9},
+ {id:'hygiene',icon:'🧹',name:'巣の衛生管理',desc:'幼虫の生存力が上昇',base:480,growth:1.8},
+ {id:'wax',icon:'🧱',name:'土壁補強',desc:'巣の耐久性が上昇',base:520,growth:1.9},
+ {id:'tunnel',icon:'🕳️',name:'高速掘削',desc:'巣の拡張速度が上昇',base:380,growth:1.8},
+ {id:'storage',icon:'🏺',name:'貯蔵能力',desc:'食料の保管効率が上昇',base:420,growth:1.8},
+ {id:'scout',icon:'🧭',name:'斥候本能',desc:'危険を早く察知する',base:360,growth:1.8},
+ {id:'alarm',icon:'🚨',name:'警戒フェロモン',desc:'侵入者への反応が上昇',base:500,growth:1.9},
+ {id:'formation',icon:'🪖',name:'集団戦術',desc:'兵隊アリの連携が上昇',base:700,growth:2.0},
+ {id:'venom',icon:'☠️',name:'毒性分泌',desc:'攻撃力が上昇',base:850,growth:2.1},
+ {id:'armor',icon:'🔰',name:'装甲プレート',desc:'防御力が上昇',base:800,growth:2.0},
+ {id:'night',icon:'🌙',name:'夜間活動',desc:'夜間の活動効率が上昇',base:650,growth:1.9},
+ {id:'rain',icon:'🌧️',name:'耐水性',desc:'雨天時の活動力が上昇',base:620,growth:1.9},
+ {id:'thermo',icon:'🌡️',name:'温度適応',desc:'環境変化への耐性が上昇',base:750,growth:2.0},
+ {id:'cooperation',icon:'🤝',name:'協調行動',desc:'ワーカーの作業効率が上昇',base:900,growth:2.0},
+ {id:'biofuel',icon:'🍃',name:'代謝最適化',desc:'食料効率が上昇',base:1000,growth:2.0},
+ {id:'recycle',icon:'♻️',name:'資源再利用',desc:'資源の無駄を減らす',base:1100,growth:2.0},
+ {id:'royal',icon:'💎',name:'王族の血統',desc:'コロニー全体の能力が上昇',base:1500,growth:2.2},
+ {id:'adapt',icon:'🧬',name:'急速適応',desc:'進化の効果がさらに上昇',base:2000,growth:2.2},
+ {id:'overmind',icon:'🌌',name:'超個体意識',desc:'すべての作業・戦闘能力が上昇',base:5000,growth:2.5}
+];
+
+function evoLevel(id){ return Number((state.evolutions||{})[id]||0); }
+function evoCost(e){ return Math.floor(e.base*Math.pow(e.growth,evoLevel(e.id))); }
+function renderEvolutions(){
+ const host=$('evolution-list'); if(!host)return;
+ host.innerHTML=EVOLUTIONS.map(e=>{const lv=evoLevel(e.id),cost=evoCost(e);return `<div class="card up"><div class="ic">${e.icon}</div><div class="tx"><b>${e.name} Lv${lv}</b><small>${e.desc} ・ 最大Lv20</small></div><button class="btn ${state.food<cost?'dis':''}" data-evo-buy="${e.id}">🍃 ${cost.toLocaleString()}</button></div>`}).join('');
+ host.querySelectorAll('[data-evo-buy]').forEach(btn=>btn.onclick=()=>buyEvolution(btn.dataset.evoBuy));
+ const total=EVOLUTIONS.reduce((n,e)=>n+evoLevel(e.id),0)+state.clawLevel+state.mandLevel+state.antLevel;
+ S('evo-total-level',total);S('evo-unlocked-count',`${EVOLUTIONS.filter(e=>evoLevel(e.id)>0).length} / ${EVOLUTIONS.length}`);
+}
+function buyEvolution(id){
+ const e=EVOLUTIONS.find(x=>x.id===id);if(!e)return;
+ const lv=evoLevel(id),cost=evoCost(e);
+ if(lv>=20){notify('この進化は最大レベルです');return;}
+ if(state.food<cost){notify('食料が足りません');return;}
+ state.food-=cost;state.evolutions=state.evolutions||{};state.evolutions[id]=lv+1;
+ // 進化効果は既存のゲーム計算にも反映
+ if(['claw','tunnel'].includes(id)){state.minerMult*=1.12;}
+ if(['mand','mandible','venom','formation','overmind','royal'].includes(id)){state.dmgMult*=1.10;}
+ notify(`${e.icon} ${e.name} が Lv${lv+1} に進化！`);
+ renderEvolutions();updateUI();saveGame();
+}
+
 upgrade('claw', 'clawLevel', 3, () => state.minerMult *= 2);
 upgrade('mand', 'mandLevel', 2.5, () => state.dmgMult *= 1.5);
 upgrade('ant', 'antLevel', 2.2, () => {});
+renderEvolutions();
 $('btn-battle').onclick = () => {
   if (state.soldiers > 0 && !state.inBattle && state.enemyIndex < ENEMIES.length) {
     const e = ENEMIES[state.enemyIndex];
