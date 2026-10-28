@@ -131,8 +131,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:var(--sub);margin:6px 0 10px">HP <span id="enemy-hp-text">100 / 100</span> ・ 報酬 🍃<span id="enemy-reward">500</span></div>
         <button class="btn red" id="btn-battle">⚔️ 討伐を開始する</button>
         <div id="battle-status" class="hidden" style="font-size:12px;color:var(--acc2)">兵隊アリが地上で戦っています…</div>
+        <div class="info-grid" style="margin-top:12px;text-align:left">
+          <div class="info-stat"><small>敵の推定必要兵隊数</small><b id="enemy-needed">1匹</b></div>
+          <div class="info-stat"><small>現在の兵隊数</small><b id="enemy-own-soldiers">0匹</b></div>
+          <div class="info-stat"><small>兵隊1匹の攻撃力</small><b id="enemy-damage">5 / 秒</b></div>
+          <div class="info-stat"><small>推定勝率</small><b id="enemy-winchance">—</b></div>
+        </div>
+        <p style="font-size:11px;color:var(--sub);line-height:1.6;margin-top:10px">必要兵隊数は攻撃力と安全係数から算出した目安です。移動時間や敵の反撃などは完全には再現していません。</p>
       </div>
-      <div class="card"><h3>縄張り</h3><div id="rival-status" style="font-size:13px;color:var(--sub)">周囲は静かです</div></div>
+      <div class="card"><h3>縄張り・侵入者</h3><div id="rival-status" style="font-size:13px;color:var(--sub)">周囲は静かです</div><div class="info-grid" style="margin-top:10px"><div class="info-stat"><small>侵入中の敵HP合計</small><b id="rival-hp">0 HP</b></div><div class="info-stat"><small>防衛に必要な兵隊数（推定）</small><b id="rival-needed">0匹</b></div></div></div>
     </section>
 
     <section class="tab" id="tab-nest">
@@ -189,8 +196,8 @@ const ENEMIES = [
   { name: "人間の子供(靴)", hp: 100000, reward: 1000000, emoji: "👟" }
 ];
 const NODE_TYPES = {
-  QUEEN: { color: '#1c110c', r: 50 }, TUNNEL: { color: '#25150e', r: 8 }, ENTRANCE: { color: '#1a0f0c', r: 9 },
-  NURSERY: { color: '#4a2b18', r: 25 }, STORAGE: { color: '#2a3322', r: 35 }, BARRACKS: { color: '#3a2020', r: 30 }
+  QUEEN: { color: '#1c110c', r: 76 }, TUNNEL: { color: '#25150e', r: 9 }, ENTRANCE: { color: '#1a0f0c', r: 11 },
+  NURSERY: { color: '#4a2b18', r: 56 }, STORAGE: { color: '#2a3322', r: 48 }, BARRACKS: { color: '#3a2020', r: 42 }
 };
 const BODY = { miner: '#6fb4f0', forager: '#8bc96b', soldier: '#e8675d', queen: '#ffb74d', rival: '#b36bd6' };
 
@@ -264,31 +271,45 @@ function initNest() {
 }
 // 見やすく整理された巣を生成。中央の幹から左右に部屋が並ぶレイアウト。
 function reformNest(silent = false) {
-  if (!silent && !confirm('巣の形を再形成しますか？\n現在の通路・部屋の配置は置き換わります。アリ、食料、進化、実績、創設時間は維持されます。')) return;
+  if (!silent && !confirm('巣の形を再形成しますか？\n中央の縦通路から左右に大きめの専用部屋を配置します。現在の部屋・通路は置き換わりますが、アリ・食料・進化・実績・創設時間は維持されます。')) return;
   const oldSize = state.nestSize;
   nestNodes = []; activeDiggers = [];
   const add = (x,y,type,parent,r) => { const n = new NestNode(x,y,type,parent); if (r) n.r=r; nestNodes.push(n); return n; };
-  // 座標は地下方向がマイナス。地表はGROUND=-200。
-  const queen = add(0, 0, 'QUEEN', null, 48);
+  // 座標系では地下ほどY値が小さくなるため、地表(GROUND)より小さい値へ伸ばす。
+  // 女王室を大きくし、幼虫室・食料庫・兵舎は用途ごとにサイズを変える。
+  const queen = add(0, 0, 'QUEEN', null, 78);
   let trunk = queen;
-  for (let y=-45; y>=GROUND+35; y-=45) trunk=add(0,y,'TUNNEL',trunk,7);
-  entrance = add(0,GROUND,'ENTRANCE',trunk,9);
-  const levels = [-105,-220,-340,-465,-590,-720,-850];
-  levels.forEach((y,i)=>{
-    const side = i%2===0 ? -1 : 1;
-    const len = 95 + (i%3)*12;
-    const base = nestNodes.filter(n=>n.type==='TUNNEL').reduce((best,n)=>Math.abs(n.y-y)<Math.abs(best.y-y)?n:best,nestNodes[1]);
-    let prev=base;
-    const steps=4;
-    for(let j=1;j<=steps;j++) prev=add(side*len*j/steps,y+(j%2? -3:3),'TUNNEL',prev,7);
-    const type=i%3===0?'NURSERY':i%3===1?'STORAGE':'BARRACKS';
-    add(side*(len+42),y,type,prev,type==='NURSERY'?24:type==='STORAGE'?31:27);
+  for (let y = -45; y >= GROUND + 20; y -= 32) trunk = add(0, y, 'TUNNEL', trunk, 8);
+  entrance = add(0, GROUND, 'ENTRANCE', trunk, 11);
+
+  // 主幹から左右に分岐。各部屋は広めに取り、用途ごとのサイズを明確にする。
+  const rooms = [
+    { y: -330, side: -1, type: 'NURSERY', r: 64, len: 150 },
+    { y: -485, side:  1, type: 'STORAGE', r: 58, len: 165 },
+    { y: -640, side: -1, type: 'BARRACKS', r: 52, len: 155 },
+    { y: -795, side:  1, type: 'NURSERY', r: 70, len: 180 },
+    { y: -950, side: -1, type: 'STORAGE', r: 62, len: 170 },
+    { y: -1105, side: 1, type: 'BARRACKS', r: 56, len: 160 },
+    { y: -1260, side: -1, type: 'NURSERY', r: 72, len: 185 },
+    { y: -1415, side: 1, type: 'STORAGE', r: 64, len: 175 }
+  ];
+  rooms.forEach((room) => {
+    // 主幹との接続点まで枝を滑らかに近づけ、短いジグザグ通路にする。
+    const junction = add(0, room.y + 58, 'TUNNEL', queen, 8);
+    let prev = junction;
+    const steps = 6;
+    for (let j = 1; j <= steps; j++) {
+      const x = room.side * room.len * j / steps;
+      const y = room.y + 58 + (j % 2 ? -3 : 3);
+      prev = add(x, y, 'TUNNEL', prev, 8);
+    }
+    add(room.side * (room.len + room.r * 0.72), room.y, room.type, prev, room.r);
   });
-  // 巣の面積を現在の部屋配置から再計算。ゲームの進行状況は維持。
-  state.nestSize=Math.max(oldSize,Math.floor(nestNodes.reduce((sum,n)=>sum+n.r*n.r/10,0)));
+  // 配置された部屋の面積を反映。進行状況や実績は維持する。
+  state.nestSize = Math.max(oldSize, Math.floor(nestNodes.reduce((sum,n)=>sum+n.r*n.r/10,0)));
   activeDiggers.push({node:queen,angle:Math.PI/2,busy:false});
-  ants.forEach(a=>{a.node=queen;a.x=queen.x+(Math.random()-.5)*18;a.y=queen.y+(Math.random()-.5)*18;a.route=[];a.cb=null;a.dg=null;a.task='idle';a.wait=0;});
-  if(!silent){notify('🏰 巣を整理された形に再形成しました！');saveGame();}
+  ants.forEach(a=>{a.node=queen;a.x=queen.x+(Math.random()-.5)*24;a.y=queen.y+(Math.random()-.5)*24;a.route=[];a.cb=null;a.dg=null;a.task='idle';a.wait=0;});
+  if(!silent){notify('🏰 用途別の大型部屋を備えた巣に再形成しました！');saveGame();}
 }
 
 function homeNode(type) {
@@ -772,8 +793,16 @@ function updateUI() {
     $('enemy-hp-bar').style.width = hp / e.hp * 100 + '%';
     $('btn-battle').classList.toggle('hidden', state.inBattle); $('battle-status').classList.toggle('hidden', !state.inBattle);
     $('btn-battle').disabled = state.soldiers < 1;
+    const dps = 5 * state.dmgMult;
+    const needed = Math.max(1, Math.ceil((e.hp / Math.max(1,dps*20))*1.5));
+    S('enemy-needed', `${needed}匹以上`); S('enemy-own-soldiers', `${state.soldiers}匹`);
+    S('enemy-damage', `${dps.toFixed(1)} / 秒`);
+    S('enemy-winchance', state.soldiers >= needed ? '高め' : state.soldiers >= Math.ceil(needed*.6) ? '五分未満' : '低い');
   }
+  const rivalHp = rivals.reduce((sum,r)=>sum+Math.max(0,r.hp),0);
+  const rivalNeed = Math.max(0,Math.ceil((rivalHp/Math.max(1,5*state.dmgMult*10))*1.5));
   S('rival-status', rivals.length ? `⚠️ 他コロニーのアリ ${rivals.length}匹が侵入中` : '周囲は静かです');
+  S('rival-hp', `${Math.ceil(rivalHp)} HP`); S('rival-needed', `${rivalNeed}匹`);
   const tj = toasts.map(t => t.msg).join('|');
   if (tj !== lastToast) { lastToast = tj; $('toasts').innerHTML = toasts.map(t => `<div class="toast">${t.msg}</div>`).join(''); }
   updateNestInfo(); checkAchievements();
