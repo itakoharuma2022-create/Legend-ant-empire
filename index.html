@@ -26,8 +26,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Hiragin
 #ctrl button{width:38px;height:38px;border-radius:12px;font-size:16px;color:var(--txt);cursor:pointer;border:1px solid var(--line);background:rgba(18,12,9,.7);backdrop-filter:blur(8px)}
 #ctrl button:active{background:rgba(242,169,59,.35)}
 #panel{height:44%;display:flex;flex-direction:column;background:var(--panel);border-top:1px solid var(--line);min-height:0}
-#tabs{display:flex;gap:6px;padding:8px 10px 6px;flex-shrink:0}
-#tabs button{flex:1;padding:8px 4px;font-size:13px;font-weight:600;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--sub);cursor:pointer}
+#tabs{display:flex;gap:6px;padding:8px 10px 6px;flex-shrink:0;overflow-x:auto;scrollbar-width:thin}
+#tabs button{flex:0 0 auto;min-width:78px;padding:8px 8px;font-size:13px;font-weight:600;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--sub);cursor:pointer}
 #tabs button.on{background:rgba(242,169,59,.14);border-color:rgba(242,169,59,.4);color:var(--acc2)}
 .tab{display:none;overflow-y:auto;padding:4px 10px 18px;flex:1;min-height:0}
 .tab.on{display:block}
@@ -54,6 +54,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .up .tx{flex:1;min-width:0}.up .tx b{font-size:14px}.up .tx small{display:block;color:var(--sub);font-size:11px;margin-top:2px}
 .up .btn{width:auto;padding:9px 12px;font-size:13px;white-space:nowrap}
 .hidden{display:none!important}
+.achievement{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--line);margin-bottom:7px}.achievement.locked{opacity:.48;filter:saturate(.4)}.achievement .badge{font-size:25px;width:38px;text-align:center}.achievement b{font-size:13px;display:block}.achievement small{display:block;color:var(--sub);font-size:11px;margin-top:3px}.achievement .check{margin-left:auto;color:var(--grn);font-size:18px}.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.info-stat{padding:10px;border-radius:11px;background:rgba(255,255,255,.04)}.info-stat small{display:block;color:var(--sub);font-size:11px}.info-stat b{display:block;font-size:17px;margin-top:3px;overflow-wrap:anywhere}
 @media(min-width:900px){#app{flex-direction:row}#panel{height:auto;width:390px;border-top:none;border-left:1px solid var(--line)}#toasts{top:56px}}
 </style>
 </head>
@@ -83,6 +84,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <button class="on" data-tab="colony">🐜 コロニー</button>
       <button data-tab="evolve">🧬 進化</button>
       <button data-tab="battle">⚔️ 地上戦</button>
+      <button data-tab="nest">🏰 巣の情報</button>
+      <button data-tab="achievements">🏆 実績</button>
+      <button data-tab="settings">⚙️ 設定</button>
     </nav>
 
     <section class="tab on" id="tab-colony">
@@ -130,6 +134,37 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       </div>
       <div class="card"><h3>縄張り</h3><div id="rival-status" style="font-size:13px;color:var(--sub)">周囲は静かです</div></div>
     </section>
+
+    <section class="tab" id="tab-nest">
+      <div class="card"><h3>コロニー概要</h3><div class="info-grid">
+        <div class="info-stat"><small>創設からの時間</small><b id="ni-age">0秒</b></div>
+        <div class="info-stat"><small>創設からの日数</small><b id="ni-days">1日目</b></div>
+        <div class="info-stat"><small>現在の総個体数</small><b id="ni-pop">0匹</b></div>
+        <div class="info-stat"><small>最大個体数</small><b id="ni-peak">0匹</b></div>
+        <div class="info-stat"><small>現在のワーカー</small><b id="ni-workers">0匹</b></div>
+        <div class="info-stat"><small>累計ワーカー誕生数</small><b id="ni-totalworkers">0匹</b></div>
+        <div class="info-stat"><small>女王の産卵予約</small><b id="ni-queued">0個</b></div>
+        <div class="info-stat"><small>巣の面積</small><b id="ni-size">0 cm²</b></div>
+        <div class="info-stat"><small>巣の部屋・通路数</small><b id="ni-nodes">0</b></div>
+        <div class="info-stat"><small>掘削回数</small><b id="ni-digs">0回</b></div>
+        <div class="info-stat"><small>累計食料搬入</small><b id="ni-food">0</b></div>
+        <div class="info-stat"><small>敵コロニー撃退数</small><b id="ni-rivals">0匹</b></div>
+        <div class="info-stat"><small>討伐した敵</small><b id="ni-battles">0体</b></div>
+        <div class="info-stat"><small>進化の合計レベル</small><b id="ni-evo">3</b></div>
+      </div></div>
+      <div class="card"><h3>職種別の個体数</h3><div class="info-grid">
+        <div class="info-stat"><small>採集アリ</small><b id="ni-foragers">0匹</b></div><div class="info-stat"><small>採掘アリ</small><b id="ni-miners">0匹</b></div><div class="info-stat"><small>兵隊アリ</small><b id="ni-soldiers">0匹</b></div><div class="info-stat"><small>卵・幼虫・蛹</small><b id="ni-brood">0匹</b></div>
+      </div></div>
+    </section>
+
+    <section class="tab" id="tab-achievements"><div class="card"><div class="row"><h3 style="margin:0">帝国の実績</h3><b><span id="ach-count">0</span> / <span id="ach-total">0</span></b></div><div class="bar" style="margin:10px 0 6px"><i id="ach-bar" style="width:0;background:linear-gradient(90deg,var(--grn),var(--acc))"></i></div><small style="color:var(--sub)">達成条件を満たすと自動で解除されます。実績はセーブデータに記録されます。</small></div><div id="achievement-list"></div></section>
+
+    <section class="tab" id="tab-settings">
+      <div class="card"><h3>セーブデータ</h3><p id="save-status" style="font-size:12px;color:var(--sub);line-height:1.7">自動セーブを準備しています…</p><button class="btn" id="btn-save-now" style="margin-top:10px">💾 今すぐ保存</button></div>
+      <div class="card"><h3>ゲーム設定</h3><p style="font-size:12px;color:var(--sub);line-height:1.7">ゲームの進行状況、実績、巣の成長データをこのブラウザに保存します。ブラウザのデータ削除や別端末への移行では、セーブが失われる場合があります。</p></div>
+      <div class="card"><h3>危険な操作</h3><p style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:12px">ゲームを初期状態に戻します。巣・個体数・食料・進化・実績・統計などの保存データがすべて消えます。</p><button class="btn red" id="btn-reset">🗑️ ゲームデータを初期化</button></div>
+      <div class="card"><h3>アリ帝国について</h3><p style="font-size:11px;color:var(--sub);line-height:1.7">アリ帝国 ～一粒の卵から地球征服まで～<br>コロニーを育て、巣を広げ、進化し、地上を制圧しよう。</p></div>
+    </section>
   </aside>
 </div>
 
@@ -166,6 +201,9 @@ const state = {
   layT: 0, digCount: 0, mound: 0, inBattle: false, enemyIndex: 0
 };
 const env = { raining: false, rainLeft: 0, nextRain: 80, collapseT: 0, nextFood: 3, nextRival: 170, rivalWave: false, rivalKills: 0 };
+const SAVE_KEY = 'antEmpireSave_v3';
+const metrics = { foundedAt: Date.now(), totalWorkers: 0, foodCollected: 0, battlesWon: 0, peakPopulation: 1, totalRivalKills: 0, achievements: {} };
+let lastSaveAt = 0, loadingSave = false;
 let T = 15, antId = 0, boss = null;
 let ants = [], items = [{ e: '🍃', val: 12, trips: 25, x: 260 }], trail = [], rivals = [], floaters = [], toasts = [];
 let nestNodes = [], activeDiggers = [], entrance = null;
@@ -317,7 +355,7 @@ class Ant {
     if (this.timer > 0) return;
     if (this.phase === 'egg') { this.phase = 'larva'; this.timer = 5; }
     else if (this.phase === 'larva') { this.phase = 'pupa'; this.timer = 4; }
-    else { this.phase = 'adult'; state[this.type + 's']++; }
+    else { this.phase = 'adult'; state[this.type + 's']++; metrics.totalWorkers++; }
   }
   walk(tx, ty, dt, spd) {
     const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy), sp = spd * dt;
@@ -336,7 +374,7 @@ class Ant {
     this.chase = false; this.task = 'home'; dest = dest || homeNode(this.type);
     this.go([{ x: entrance.x, y: entrance.y, node: entrance }].concat(nodePts(path(entrance, dest))), () => {
       if (this.carry === 'food') {
-        state.food += this.val; incomeLog.push({ t: T, v: this.val }); floater(this.x, this.y - 8, '+' + this.val); this.carry = null;
+        state.food += this.val; metrics.foodCollected += this.val; incomeLog.push({ t: T, v: this.val }); floater(this.x, this.y - 8, '+' + this.val); this.carry = null;
         if (!state.firstFood) { state.firstFood = 1; notify('🍃 最初の餌が届きました！卵を産ませましょう'); }
       }
       this.task = 'idle';
@@ -528,11 +566,133 @@ mini.addEventListener('pointerdown', e => { mini.setPointerCapture(e.pointerId);
 mini.addEventListener('pointermove', e => { if (e.buttons) miniJump(e); });
 
 // ==========================================
+// 実績・巣の統計・セーブデータ
+// ==========================================
+const ACHIEVEMENTS = [
+  ['first_food','🍃','最初のごちそう','初めて食料を巣に運び込む',m=>state.firstFood===1],
+  ['worker_1','🐜','小さな一歩','ワーカーを1匹誕生させる',m=>m.totalWorkers>=1],
+  ['worker_5','🐜','働き者の集団','ワーカー累計5匹',m=>m.totalWorkers>=5],
+  ['worker_10','🐜','小さなコロニー','ワーカー累計10匹',m=>m.totalWorkers>=10],
+  ['worker_25','🐜','アリの大家族','ワーカー累計25匹',m=>m.totalWorkers>=25],
+  ['worker_50','🐜','百匹への道','ワーカー累計50匹',m=>m.totalWorkers>=50],
+  ['worker_100','🏘️','大所帯','ワーカー累計100匹',m=>m.totalWorkers>=100],
+  ['worker_250','🏘️','地下都市','ワーカー累計250匹',m=>m.totalWorkers>=250],
+  ['worker_500','🏙️','巨大コロニー','ワーカー累計500匹',m=>m.totalWorkers>=500],
+  ['worker_1000','👑','アリの帝国','ワーカー累計1,000匹',m=>m.totalWorkers>=1000],
+  ['pop_10','📈','人口増加','現在の個体数10匹以上',m=>population()>=10],
+  ['pop_25','📈','にぎやかな巣','現在の個体数25匹以上',m=>population()>=25],
+  ['pop_50','📈','満員御礼','現在の個体数50匹以上',m=>population()>=50],
+  ['pop_100','🌆','地下メガシティ','現在の個体数100匹以上',m=>population()>=100],
+  ['peak_25','🏅','最高記録','最大個体数25匹を記録',m=>m.peakPopulation>=25],
+  ['peak_100','🏅','人口爆発','最大個体数100匹を記録',m=>m.peakPopulation>=100],
+  ['food_100','🍃','食料庫の始まり','累計食料搬入100',m=>m.foodCollected>=100],
+  ['food_1000','🥬','食料豊富','累計食料搬入1,000',m=>m.foodCollected>=1000],
+  ['food_10000','🍱','食料王','累計食料搬入10,000',m=>m.foodCollected>=10000],
+  ['food_100000','🍽️','飢え知らず','累計食料搬入100,000',m=>m.foodCollected>=100000],
+  ['dig_1','⛏️','最初のトンネル','巣を1回掘る',m=>state.digCount>=1],
+  ['dig_10','⛏️','掘削チーム','巣を10回掘る',m=>state.digCount>=10],
+  ['dig_25','🪨','地下開発','巣を25回掘る',m=>state.digCount>=25],
+  ['dig_50','🪨','掘削の達人','巣を50回掘る',m=>state.digCount>=50],
+  ['dig_100','🕳️','地底迷宮','巣を100回掘る',m=>state.digCount>=100],
+  ['nest_500','🏰','巣の拡張','巣の面積500 cm²以上',m=>state.nestSize>=500],
+  ['nest_1000','🏰','大きな地下王国','巣の面積1,000 cm²以上',m=>state.nestSize>=1000],
+  ['nest_5000','🏰','地下要塞','巣の面積5,000 cm²以上',m=>state.nestSize>=5000],
+  ['miner_1','⛏️','地中の職人','採掘アリを1匹育てる',m=>state.miners>=1],
+  ['miner_10','⛏️','土木会社','採掘アリ10匹以上',m=>state.miners>=10],
+  ['forager_1','🍃','食料調達係','採集アリを1匹育てる',m=>state.foragers>=1],
+  ['forager_10','🍃','食料輸送隊','採集アリ10匹以上',m=>state.foragers>=10],
+  ['soldier_1','⚔️','初めての兵隊','兵隊アリを1匹育てる',m=>state.soldiers>=1],
+  ['soldier_10','🛡️','精鋭部隊','兵隊アリ10匹以上',m=>state.soldiers>=10],
+  ['evo_2','🧬','進化の兆し','いずれかの進化をLv2にする',m=>Math.max(state.clawLevel,state.mandLevel,state.antLevel)>=2],
+  ['evo_5','🧬','進化の研究者','いずれかの進化をLv5にする',m=>Math.max(state.clawLevel,state.mandLevel,state.antLevel)>=5],
+  ['evo_all2','🔬','三つの力','全進化をLv2以上にする',m=>state.clawLevel>=2&&state.mandLevel>=2&&state.antLevel>=2],
+  ['battle_1','⚔️','初勝利','敵を1体討伐する',m=>m.battlesWon>=1],
+  ['battle_3','⚔️','地上の脅威','敵を3体討伐する',m=>m.battlesWon>=3],
+  ['battle_all','👑','地上制圧','すべての討伐対象を倒す',m=>state.enemyIndex>=ENEMIES.length],
+  ['rival_1','🛡️','縄張り防衛','敵コロニーのアリを1匹撃退',m=>m.totalRivalKills>=1],
+  ['rival_10','🛡️','国境警備隊','敵コロニーのアリを累計10匹撃退',m=>m.totalRivalKills>=10],
+  ['time_1m','⏳','時の流れ','ゲーム内時間で1分経過',m=>T>=60],
+  ['time_5m','⏳','長期運営','ゲーム内時間で5分経過',m=>T>=300],
+  ['time_15m','⏳','老舗コロニー','ゲーム内時間で15分経過',m=>T>=900],
+  ['day_2','🌅','新しい朝','2日目に到達',m=>T>=DAY],
+  ['day_5','🌞','季節を越えて','5日目に到達',m=>T>=DAY*4],
+  ['brood_10','🥚','次世代の準備','卵・幼虫・蛹が10匹以上',m=>ants.filter(a=>a.phase!=='adult').length>=10],
+  ['queue_5','🥚','産卵ラッシュ','産卵予約が合計5個以上',m=>queued()>=5],
+  ['mound_10','⛰️','土の山','土の山を10個作る',m=>state.mound>=10],
+  ['mound_50','⛰️','巨大な蟻塚','土の山を50個作る',m=>state.mound>=50],
+  ['all_types','🐜','分業体制','3種類のワーカーをすべて保有',m=>state.miners>0&&state.foragers>0&&state.soldiers>0],
+  ['food_bank','💰','備蓄万全','現在の食料を1,000以上にする',m=>state.food>=1000],
+  ['food_bank2','💎','食料大富豪','現在の食料を10,000以上にする',m=>state.food>=10000],
+  ['population_cap','🧱','収容限界','個体数が収容力の90%以上になる',m=>population()>=popCap()*.9],
+  ['rooms_20','🧭','部屋づくり','巣のノードが20個以上になる',m=>nestNodes.length>=20],
+  ['rooms_50','🧭','複雑な地下網','巣のノードが50個以上になる',m=>nestNodes.length>=50],
+  ['queen_mother','👑','女王の繁栄','ワーカー累計100匹を誕生させる',m=>m.totalWorkers>=100],
+  ['empire_1','🌍','帝国の第一歩','実績を10個解除する',m=>Object.keys(m.achievements).length>=10],
+  ['empire_2','🌍','伝説のコロニー','実績を25個解除する',m=>Object.keys(m.achievements).length>=25],
+  ['empire_3','🌌','アリ神話','実績を40個解除する',m=>Object.keys(m.achievements).length>=40]
+];
+function population(){ return ants.length; }
+function fmtTime(sec){ sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60; return h?`${h}時間 ${m}分` : m?`${m}分 ${s}秒`:`${s}秒`; }
+function checkAchievements(){
+  for(const a of ACHIEVEMENTS){ if(!metrics.achievements[a[0]] && a[4](metrics)){ metrics.achievements[a[0]]=Date.now(); notify(`🏆 実績解除：${a[2]}`); saveGame(); } }
+}
+function renderAchievements(){
+  const list=$('achievement-list'); if(!list) return;
+  const done=ACHIEVEMENTS.filter(a=>metrics.achievements[a[0]]).length;
+  S('ach-count',done); S('ach-total',ACHIEVEMENTS.length); $('ach-bar').style.width=(done/ACHIEVEMENTS.length*100)+'%';
+  list.innerHTML=ACHIEVEMENTS.map(a=>{const yes=!!metrics.achievements[a[0]];return `<div class="achievement ${yes?'':'locked'}"><div class="badge">${yes?a[1]:'🔒'}</div><div><b>${yes?a[2]:'？？？'}</b><small>${yes?a[3]:'条件：'+a[3]}</small></div><div class="check">${yes?'✓':''}</div></div>`}).join('');
+}
+function updateNestInfo(){
+ const adults=state.miners+state.foragers+state.soldiers, brood=ants.filter(a=>a.phase!=='adult').length;
+ metrics.peakPopulation=Math.max(metrics.peakPopulation,population());
+ const set=(id,v)=>S(id,v);
+ set('ni-age',fmtTime((Date.now()-(metrics.foundedAt||Date.now()))/1000));set('ni-days',`${Math.floor(T/DAY)+1}日目`);set('ni-pop',`${population()}匹`);set('ni-peak',`${metrics.peakPopulation}匹`);set('ni-workers',`${adults}匹`);set('ni-totalworkers',`${metrics.totalWorkers}匹`);set('ni-queued',`${queued()}個`);set('ni-size',`${state.nestSize.toLocaleString()} cm²`);set('ni-nodes',nestNodes.length);set('ni-digs',`${state.digCount}回`);set('ni-food',Math.floor(metrics.foodCollected).toLocaleString());set('ni-rivals',`${metrics.totalRivalKills}匹`);set('ni-battles',`${metrics.battlesWon}体`);set('ni-evo',state.clawLevel+state.mandLevel+state.antLevel);set('ni-foragers',`${state.foragers}匹`);set('ni-miners',`${state.miners}匹`);set('ni-soldiers',`${state.soldiers}匹`);set('ni-brood',`${brood}匹`);
+}
+function saveGame(){
+ if(loadingSave) return;
+ try{
+  const nodeIds=new Map(nestNodes.map((n,i)=>[n,i]));
+  const data={version:3,savedAt:Date.now(),state,env,T,metrics,
+   nodes:nestNodes.map(n=>({x:n.x,y:n.y,type:n.type,r:n.r,parent:n.parent?nodeIds.get(n.parent):-1})),
+   ants:ants.map(a=>({type:a.type,node:nodeIds.get(a.node)||0,x:a.x,y:a.y,phase:a.phase,timer:a.timer,moved:a.moved,hungry:a.hungry,angle:a.angle,carry:a.carry,val:a.val,wait:a.wait,digging:a.digging,base:a.base,legT:a.legT,lane:a.lane})),
+   items,trail,rivals,boss,underView};
+  localStorage.setItem(SAVE_KEY,JSON.stringify(data)); lastSaveAt=Date.now();
+  const el=$('save-status');if(el)el.textContent=`自動セーブ有効 ・ 最終保存：${new Date(lastSaveAt).toLocaleString('ja-JP')}（この端末のブラウザ）`;
+  return true;
+ }catch(e){console.warn('Save failed',e);const el=$('save-status');if(el)el.textContent='保存できませんでした。ブラウザの容量・プライベートモード設定を確認してください。';return false;}
+}
+function loadGame(){
+ try{
+  const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const d=JSON.parse(raw);if(!d||d.version!==3)return false;
+  loadingSave=true;Object.assign(state,d.state||{});Object.assign(env,d.env||{});T=Number(d.T)||15;Object.assign(metrics,d.metrics||{});metrics.achievements=metrics.achievements||{};
+  nestNodes=[];activeDiggers=[];const nodes=d.nodes||[];
+  for(const nd of nodes){const n=new NestNode(nd.x,nd.y,nd.type,null);n.r=nd.r;nestNodes.push(n);}
+  nodes.forEach((nd,i)=>{if(nd.parent>=0&&nestNodes[nd.parent]){nestNodes[i].parent=nestNodes[nd.parent];nestNodes[nd.parent].children.push(nestNodes[i]);}});
+  if(!nestNodes.length){initNest();} else {entrance=nestNodes.find(n=>n.type==='ENTRANCE')||nestNodes[nestNodes.length-1];}
+  ants=[];state.miners=0;state.foragers=0;state.soldiers=0;
+  for(const ad of (d.ants||[])){const a=new Ant(ad.type,nestNodes[ad.node]||nestNodes[0]);Object.assign(a,ad);a.node=nestNodes[ad.node]||nestNodes[0];a.route=[];a.cb=null;a.dg=null;a.carrier=null;a.chase=false;a.task='idle';a.wait=0; if(a.phase==='adult')state[a.type+'s']++;ants.push(a);}
+  antId=Math.max(antId,...ants.map(a=>a.id||0));items=d.items||items;trail=d.trail||[];rivals=d.rivals||[];boss=d.boss||null;underView=!!d.underView;
+  if(!metrics.foundedAt)metrics.foundedAt=Date.now();
+  activeDiggers=[];const digNodes=nestNodes.filter(n=>n.type!=='ENTRANCE');const digCount=Math.min(8,Math.max(1,1+Math.floor(state.miners/2)));for(let i=0;i<digCount;i++){const n=i===0?nestNodes[0]:digNodes[Math.max(0,digNodes.length-1-i)];if(n)activeDiggers.push({node:n,angle:Math.PI/2,busy:false});}
+  loadingSave=false;return true;
+ }catch(e){loadingSave=false;console.warn('Load failed',e);return false;}
+}
+function resetGame(){
+ if(!confirm('本当に初期化しますか？\n巣・アリ・食料・進化・実績などのセーブデータがすべて消えます。この操作は取り消せません。'))return;
+ localStorage.removeItem(SAVE_KEY);location.reload();
+}
+$('btn-save-now').onclick=()=>{if(saveGame())notify('💾 ゲームを保存しました');};
+$('btn-reset').onclick=resetGame;
+window.addEventListener('pagehide',saveGame);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveGame();});
+setInterval(saveGame,5000);
+
+// ==========================================
 // UI
 // ==========================================
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + b.dataset.tab));
+  if (b.dataset.tab === 'achievements') renderAchievements();
 });
 ['miner', 'forager', 'soldier'].forEach(k => { $('btn-lay-' + k).onclick = () => orderEgg(k); });
 function upgrade(key, field, mult, fn) {
@@ -585,6 +745,7 @@ function updateUI() {
   S('rival-status', rivals.length ? `⚠️ 他コロニーのアリ ${rivals.length}匹が侵入中` : '周囲は静かです');
   const tj = toasts.map(t => t.msg).join('|');
   if (tj !== lastToast) { lastToast = tj; $('toasts').innerHTML = toasts.map(t => `<div class="toast">${t.msg}</div>`).join(''); }
+  updateNestInfo(); checkAchievements();
 }
 
 // ==========================================
@@ -614,7 +775,7 @@ function update(dt) {
     else if (r.life > 0 && it) it.trips -= 0.25 * dt;
   }
   const before = rivals.length;
-  rivals = rivals.filter(r => { if (r.hp <= 0) { env.rivalKills++; return false; } return !(r.life < 0 && Math.abs(r.x) > WORLD + 60); });
+  rivals = rivals.filter(r => { if (r.hp <= 0) { env.rivalKills++; metrics.totalRivalKills++; return false; } return !(r.life < 0 && Math.abs(r.x) > WORLD + 60); });
   if (before && !rivals.length && env.rivalWave) {
     env.rivalWave = false;
     if (env.rivalKills > 0) { const rw = 60 + env.rivalKills * 15; state.food += rw; notify(`🛡️ 縄張りを守った！ +${rw}🍃`); }
@@ -626,7 +787,7 @@ function update(dt) {
   if (boss && boss.hp <= 0) {
     const e = ENEMIES[state.enemyIndex]; state.food += e.reward;
     floater(boss.x, GROUND - 30, `討伐成功! +${e.reward}🍃`); notify(`⚔️ ${e.name}を討伐！ +${e.reward.toLocaleString()}🍃`);
-    boss = null; state.inBattle = false; state.enemyIndex++;
+    boss = null; state.inBattle = false; state.enemyIndex++; metrics.battlesWon++;
   }
   ants.forEach(a => a.update(dt));
   floaters.forEach(f => { f.t -= dt; f.y -= 18 * dt; }); floaters = floaters.filter(f => f.t > 0);
@@ -811,13 +972,16 @@ function drawMini() {
 // ==========================================
 // 開始: 女王のそばに卵を1つ置いて、そこから帝国を築く
 // ==========================================
-initNest();
-{
-  const first = new Ant('forager', nestNodes[0]);
-  first.x = 46; first.y = 14; first.timer = 6;
-  ants.push(first);
+const didLoad = loadGame();
+if (!didLoad) {
+  initNest();
+  { const first = new Ant('forager', nestNodes[0]); first.x = 46; first.y = 14; first.timer = 6; ants.push(first); }
+  metrics.foundedAt = Date.now(); metrics.peakPopulation = 1;
+  notify('🥚 卵が孵るのを待ち、最初の働きアリに餌を運ばせましょう');
+} else {
+  notify('💾 セーブデータを読み込みました。おかえりなさい！');
+  renderAchievements();
 }
-notify('🥚 卵が孵るのを待ち、最初の働きアリに餌を運ばせましょう');
 let last = performance.now(), uiAcc = 0;
 function frame(now) {
   requestAnimationFrame(frame);
