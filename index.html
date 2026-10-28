@@ -970,11 +970,31 @@ function draw() {
   const leaves = Math.min(6, Math.floor(Math.log10(state.food + 1) * 2));
   for (const n of nestNodes) {
     if (n.type === 'ENTRANCE' || n.x + n.r < left || n.x - n.r > right || n.y + n.r < tp || n.y - n.r > bt) continue;
-    const rg = ctx.createRadialGradient(n.x, n.y - n.r * .2, n.r * .1, n.x, n.y, n.r);
-    rg.addColorStop(0, NODE_TYPES[n.type].color); rg.addColorStop(1, 'rgba(18,10,7,1)');
-    ctx.fillStyle = 'rgba(30,18,12,.55)'; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3, 0, 6.283); ctx.fill();
-    ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.283); ctx.fill();
-    if (n.type === 'STORAGE') { ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; for (let i = 0; i < leaves; i++) ctx.fillText(i % 2 ? '🍂' : '🍃', n.x - 14 + (i * 13) % 26, n.y - 6 + (i * 7) % 14); }
+    // 部屋は丸ではなく、角を少し丸めた用途別の四角形にする。
+    // n.r は既存ロジックとの互換性のため維持し、描画時だけ幅・高さを用途別に調整。
+    const roomShape = {
+      QUEEN:     { w: 2.35, h: 1.72 },
+      NURSERY:   { w: 2.55, h: 1.65 },
+      STORAGE:   { w: 2.15, h: 1.55 },
+      BARRACKS:  { w: 1.95, h: 1.5 },
+      TUNNEL:    { w: 1.25, h: 1.15 },
+      ENTRANCE:  { w: 1.45, h: 1.2 }
+    }[n.type] || { w: 1.8, h: 1.45 };
+    const rw = Math.max(34, n.r * roomShape.w);
+    const rh = Math.max(27, n.r * roomShape.h);
+    const rr = Math.min(15, rw * .16, rh * .22);
+    const roundedRoom = (x, y, w, h, r) => {
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+      else { ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); }
+      ctx.closePath();
+    };
+    const rg = ctx.createLinearGradient(n.x-rw/2, n.y-rh/2, n.x+rw/2, n.y+rh/2);
+    rg.addColorStop(0, NODE_TYPES[n.type].color); rg.addColorStop(.55, NODE_TYPES[n.type].color); rg.addColorStop(1, 'rgba(18,10,7,1)');
+    ctx.fillStyle = 'rgba(30,18,12,.62)'; roundedRoom(n.x-rw/2-3, n.y-rh/2-3, rw+6, rh+6, rr+3); ctx.fill();
+    ctx.fillStyle = rg; roundedRoom(n.x-rw/2, n.y-rh/2, rw, rh, rr); ctx.fill();
+    ctx.strokeStyle = 'rgba(210,160,112,.2)'; ctx.lineWidth = 1; roundedRoom(n.x-rw/2+3, n.y-rh/2+3, rw-6, rh-6, Math.max(3,rr-3)); ctx.stroke();
+    if (n.type === 'STORAGE') { ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; for (let i = 0; i < leaves; i++) ctx.fillText(i % 2 ? '🍂' : '🍃', n.x - rw*.3 + (i * 13) % Math.max(20,rw*.6), n.y - 3 + (i * 7) % Math.max(12,rh*.45)); }
   }
   // 地表
   ctx.fillStyle = s.c; ctx.fillRect(left, GROUND - 4, right - left, 7);
