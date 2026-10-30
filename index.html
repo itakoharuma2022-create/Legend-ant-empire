@@ -213,7 +213,7 @@ const ROOM_INFO = { NURSERY: { icon: '🥚', name: '育児室', cost: 40 }, STOR
 const BODY = { miner: '#6fb4f0', forager: '#8bc96b', soldier: '#e8675d', queen: '#ffb74d', rival: '#b36bd6' };
 
 const state = {
-  food: 5, nestSize: 200, miners: 0, foragers: 0, soldiers: 0,
+  food: 10, nestSize: 200, miners: 0, foragers: 0, soldiers: 0,
   clawLevel: 1, mandLevel: 1, antLevel: 1, minerMult: 1, dmgMult: 1,
   costs: { claw: 300, mand: 200, ant: 150 },
   evolutions: {},
@@ -346,6 +346,10 @@ function regenerateNest(silent) {
 // 巣の維持管理(0.5秒ごと): 掘削担当の補充と、各部屋の利用数の集計
 let upkeepT = 0;
 function upkeep() {
+  if (state.foragers < 1 && !ants.some(a => a.type === 'forager') && state.orders.forager < 1 && state.food < eggCost('forager')) {
+    const e = new Ant('forager', nestNodes[0]); e.free = true; ants.push(e);
+    notify('🥚 女王が最後の力で卵を産みました。この子が餌を運びます');
+  }
   if (!activeDiggers.length) seedDigger();
   else if (activeDiggers.length < maxDiggers() && Math.random() < 0.35) seedDigger();
   for (const n of nestNodes) n.use = 0;
@@ -453,7 +457,6 @@ function spawnRivals() {
 // 産卵の指示: タップ → 食料を払って予約 → 女王が順に産む
 const queued = () => state.orders.miner + state.orders.forager + state.orders.soldier;
 function orderBlock(type) {
-  if (!state.firstFood) return '🐜 最初の採集アリが外から餌を運んでくるのを待ちましょう';
   if (state.food < eggCost(type)) return '🍃 食料を集めるとアリを羽化させられます';
   if (ants.length + queued() >= popCap()) return '🕳️ 収容力がいっぱいです。採掘アリが巣を広げるのを待ちましょう';
   if (broodNow() + queued() >= broodCap()) return '🥚 育児室がいっぱいです。「部屋の増築」で育児室を作りましょう';
@@ -466,7 +469,6 @@ function orderEgg(type) {
 }
 const roomCost = t => Math.round(ROOM_INFO[t].cost * Math.pow(1.2, roomCount(t) + state.roomQueue.filter(x => x === t).length));
 function buildRoom(t) {
-  if (!state.firstFood) { notify('🍃 最初の餌が届くまで待ちましょう'); return; }
   if (state.miners < 1) { notify('⛏️ 部屋を掘る採掘アリがいません。先に採掘アリを羽化させましょう'); return; }
   const c = roomCost(t); if (state.food < c) { notify('🍃 食料が足りません'); return; }
   state.food -= c; state.roomQueue.push(t); notify(`${ROOM_INFO[t].icon} ${ROOM_INFO[t].name}の工事を指示しました。採掘アリが掘ります`); updateUI();
@@ -496,7 +498,7 @@ class Ant {
   }
   grow(dt) {
     if (this.carrier) return;
-    if (this.phase === 'larva') {
+    if (this.phase === 'larva' && !this.free) {
       const need = 0.4 * dt / (1 + EVO.larvaFood);
       if (state.food < need) { this.hungry = true; return; }
       state.food -= need; this.hungry = false;
@@ -1290,7 +1292,7 @@ function drawMini() {
 const didLoad = loadGame();
 if (!didLoad) {
   initNest(); state.nestSize = nestArea();
-  { const first = new Ant('forager', nestNodes[0]); first.x = nestNodes[0].x + 54; first.y = nestNodes[0].y + 16; first.timer = 6; ants.push(first); }
+  { const first = new Ant('forager', nestNodes[0]); first.x = nestNodes[0].x + 54; first.y = nestNodes[0].y + 16; first.free = true; first.timer = 6; ants.push(first); }
   metrics.foundedAt = Date.now(); metrics.peakPopulation = 1;
   notify('🥚 卵が孵るのを待ち、最初の働きアリに餌を運ばせましょう');
 } else {
