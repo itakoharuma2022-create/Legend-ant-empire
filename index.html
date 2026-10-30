@@ -56,6 +56,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .hidden{display:none!important}
 .achievement{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--line);margin-bottom:7px}.achievement.locked{opacity:.48;filter:saturate(.4)}.achievement .badge{font-size:25px;width:38px;text-align:center}.achievement b{font-size:13px;display:block}.achievement small{display:block;color:var(--sub);font-size:11px;margin-top:3px}.achievement .check{margin-left:auto;color:var(--grn);font-size:18px}.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.info-stat{padding:10px;border-radius:11px;background:rgba(255,255,255,.04)}.info-stat small{display:block;color:var(--sub);font-size:11px}.info-stat b{display:block;font-size:17px;margin-top:3px;overflow-wrap:anywhere}
 @media(min-width:900px){#app{flex-direction:row}#panel{height:auto;width:390px;border-top:none;border-left:1px solid var(--line)}#toasts{top:56px}}
+.fchip{flex:0 0 auto;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--sub);font-size:12px;cursor:pointer}
+.fchip.on{background:rgba(242,169,59,.16);color:var(--acc2);border-color:rgba(242,169,59,.4)}
+.evo-sec{font-size:12px;color:var(--sub);margin:14px 2px 8px;letter-spacing:.06em}
 </style>
 </head>
 <body>
@@ -104,6 +107,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div id="lay-hint" style="font-size:11px;color:var(--sub);margin-top:10px"></div>
       </div>
       <div class="card">
+        <h3>🏗️ 部屋の増築 (採掘アリが掘ります)</h3>
+        <div class="up" style="margin-bottom:10px"><div class="ic">🥚</div><div class="tx"><b>育児室 <span id="rm-n-NURSERY">0</span>室</b><small>卵・幼虫・蛹を育てる ・ 収容 <span id="rm-c-NURSERY">0</span> ・ 工事待ち <span id="rm-q-NURSERY">0</span></small></div><button class="btn" id="btn-room-NURSERY">増築 🍃<span id="rm-cost-NURSERY">40</span></button></div>
+        <div class="up" style="margin-bottom:10px"><div class="ic">🍃</div><div class="tx"><b>食料庫 <span id="rm-n-STORAGE">0</span>室</b><small>採集アリの搬入先 ・ 備蓄 <span id="rm-c-STORAGE">0</span> ・ 工事待ち <span id="rm-q-STORAGE">0</span></small></div><button class="btn" id="btn-room-STORAGE">増築 🍃<span id="rm-cost-STORAGE">60</span></button></div>
+        <div class="up"><div class="ic">⚔️</div><div class="tx"><b>兵舎 <span id="rm-n-BARRACKS">0</span>室</b><small>兵隊アリが待機する ・ 収容 <span id="rm-c-BARRACKS">0</span> ・ 工事待ち <span id="rm-q-BARRACKS">0</span></small></div><button class="btn" id="btn-room-BARRACKS">増築 🍃<span id="rm-cost-BARRACKS">80</span></button></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:10px;line-height:1.6">採掘アリがいると、通路の先に部屋を掘ります。育児室が満員だと卵を産めず、兵舎が満員だと兵隊アリを増やせません。</div>
+      </div>
+      <div class="card">
         <h3>状況</h3>
         <div class="grid3">
           <div class="stat"><small>掘削/分</small><b id="st-dig">0</b></div>
@@ -117,7 +127,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </section>
 
     <section class="tab" id="tab-evolve">
-      <div class="card"><h3>🧬 コロニー進化研究所</h3><p style="font-size:12px;color:var(--sub);line-height:1.7">食料を使って多様な進化を研究しよう。各進化は複数レベルまで強化可能。購入した進化はセーブデータに保存されます。</p><div class="info-grid"><div class="info-stat"><small>研究済み進化レベル合計</small><b id="evo-total-level">3</b></div><div class="info-stat"><small>研究項目</small><b id="evo-unlocked-count">0 / 30</b></div></div></div>
+      <div class="card"><h3>🧬 コロニー進化研究所</h3><p style="font-size:12px;color:var(--sub);line-height:1.7">食料を使って進化を研究します。各進化は最大Lv20まで強化でき、効果はすべて実際のゲームに反映されます。</p><div class="info-grid"><div class="info-stat"><small>研究済みレベル合計</small><b id="evo-total-level">0</b></div><div class="info-stat"><small>研究項目</small><b id="evo-unlocked-count">0 / 0</b></div></div></div>
+      <div id="evo-filter" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:6px;padding-bottom:4px"></div>
       <div id="evolution-list"></div>
     </section>
 
@@ -168,7 +179,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <section class="tab" id="tab-settings">
       <div class="card"><h3>セーブデータ</h3><p id="save-status" style="font-size:12px;color:var(--sub);line-height:1.7">自動セーブを準備しています…</p><button class="btn" id="btn-save-now" style="margin-top:10px">💾 今すぐ保存</button><button class="btn" id="btn-export-save" style="margin-top:8px">📤 セーブをJSONで書き出す</button><button class="btn" id="btn-import-save" style="margin-top:8px">📥 JSONセーブを読み込む</button><input type="file" id="save-file-input" accept=".json,application/json" style="display:none"><small style="display:block;color:var(--sub);margin-top:8px;line-height:1.6">別端末ではJSONを書き出してファイルを移し、この画面で読み込んでください。読み込み時は現在の進行状況が置き換わります。</small></div>
       <div class="card"><h3>ゲーム設定</h3><p style="font-size:12px;color:var(--sub);line-height:1.7">ゲームの進行状況、実績、巣の成長データをこのブラウザに保存します。ブラウザのデータ削除や別端末への移行では、セーブが失われる場合があります。</p></div>
-      <div class="card"><h3>巣の形を整える</h3><p style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:12px">巣を、中央の幹から左右に部屋が広がる整理された形に再形成します。アリ・食料・進化・実績・創設時間は維持します。現在の通路配置は置き換わります。</p><button class="btn" id="btn-reform-nest">🏰 巣を再形成</button></div>
+      <div class="card"><h3>巣を作り直す</h3><p style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:12px">通路が枝分かれし、左右に広がる自然な形の巣を作り直します。育児室・食料庫・兵舎も用途ごとに配置されます。アリ・食料・進化・実績・創設時間は維持されます。</p><button class="btn" id="btn-reform-nest">🏰 巣を作り直す</button></div>
       <div class="card"><h3>危険な操作</h3><p style="font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:12px">ゲームを初期状態に戻します。巣・個体数・食料・進化・実績・統計などの保存データがすべて消えます。</p><button class="btn red" id="btn-reset">🗑️ ゲームデータを初期化</button></div>
       <div class="card"><h3>アリ帝国について</h3><p style="font-size:11px;color:var(--sub);line-height:1.7">アリ帝国 ～一粒の卵から地球征服まで～<br>コロニーを育て、巣を広げ、進化し、地上を制圧しよう。</p></div>
     </section>
@@ -195,9 +206,10 @@ const ENEMIES = [
   { name: "人間の子供(靴)", hp: 100000, reward: 1000000, emoji: "👟" }
 ];
 const NODE_TYPES = {
-  QUEEN: { color: '#1c110c', r: 76 }, TUNNEL: { color: '#25150e', r: 9 }, ENTRANCE: { color: '#1a0f0c', r: 11 },
-  NURSERY: { color: '#4a2b18', r: 56 }, STORAGE: { color: '#2a3322', r: 48 }, BARRACKS: { color: '#3a2020', r: 42 }
+  QUEEN: { color: '#1c110c', r: 52 }, TUNNEL: { color: '#25150e', r: 9 }, ENTRANCE: { color: '#1a0f0c', r: 11 },
+  NURSERY: { color: '#5a3820', r: 40 }, STORAGE: { color: '#33402a', r: 42 }, BARRACKS: { color: '#4a2a28', r: 36 }
 };
+const ROOM_INFO = { NURSERY: { icon: '🥚', name: '育児室', cost: 40 }, STORAGE: { icon: '🍃', name: '食料庫', cost: 60 }, BARRACKS: { icon: '⚔️', name: '兵舎', cost: 80 } };
 const BODY = { miner: '#6fb4f0', forager: '#8bc96b', soldier: '#e8675d', queen: '#ffb74d', rival: '#b36bd6' };
 
 const state = {
@@ -205,6 +217,7 @@ const state = {
   clawLevel: 1, mandLevel: 1, antLevel: 1, minerMult: 1, dmgMult: 1,
   costs: { claw: 300, mand: 200, ant: 150 },
   evolutions: {},
+  roomQueue: [],
   orders: { miner: 0, forager: 0, soldier: 0 },
   layT: 0, digCount: 0, mound: 0, inBattle: false, enemyIndex: 0
 };
@@ -219,12 +232,17 @@ const incomeLog = [], digLog = [];
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const popCap = () => 4 + Math.floor(state.nestSize / 60);
+const EVO_T = {}, EVO = new Proxy(EVO_T, { get: (t, k) => t[k] || 0 });
+const minerMult = () => 1 + EVO.dig;
+const dmgMult = () => 1 + EVO.dmg;
+const eggCost = t => Math.max(1, Math.round(EGG_COST[t] / (1 + EVO.eggcost)));
+const popCap = () => Math.floor((4 + state.nestSize / 60) * (1 + EVO.cap));
 
 const dayPhase = () => (T % DAY) / DAY;
 const isNight = () => dayPhase() >= 0.6;
 const season = () => SEASONS[Math.floor(T / (DAY * 4)) % 4];
-const canGoOut = () => !isNight() && !env.raining;
+const canGoOut = () => (!isNight() || EVO.nightOut > 0) && (!env.raining || EVO.rainOut > 0);
+const outChance = () => (isNight() ? Math.min(1, 0.15 + EVO.nightOut * 1.2) : 1) * (env.raining ? Math.min(1, 0.15 + EVO.rainOut * 1.2) : 1);
 function light() {
   const p = dayPhase();
   if (p < 0.55) return 1;
@@ -241,10 +259,14 @@ function notify(msg) { if (!toasts.some(t => t.msg === msg)) toasts.push({ msg, 
 class NestNode {
   constructor(x, y, type, parent) {
     this.x = x; this.y = y; this.type = type;
-    this.r = NODE_TYPES[type].r * (0.8 + Math.random() * 0.4);
+    this.r = NODE_TYPES[type].r * (0.85 + Math.random() * 0.3);
+    this.seed = Math.random() * 1000 | 0; this.tw = [11, 14, 17][Math.random() * 3 | 0]; this.bend = (Math.random() - .5) * 0.36; this.use = 0;
+    this.setShape();
     this.parent = parent; this.children = [];
     if (parent) parent.children.push(this);
   }
+  isRoom() { return this.type !== 'TUNNEL' && this.type !== 'ENTRANCE'; }
+  setShape() { if (this.isRoom()) { this.rx = this.r * 1.3; this.ry = this.r * 0.82; } else { this.rx = this.ry = this.r; } }
 }
 function path(a, b) {
   const A = [], setA = new Set(); let n = a;
@@ -257,94 +279,148 @@ function path(a, b) {
 }
 function nodePts(list) {
   return list.map(n => {
-    const j = (n.type === 'TUNNEL' || n.type === 'ENTRANCE') ? 2 : n.r * 0.35;
-    return { x: n.x + (Math.random() - .5) * j * 2, y: n.y + (Math.random() - .5) * j * 2, node: n };
+    const jx = n.isRoom() ? n.rx * 0.35 : 2, jy = n.isRoom() ? n.ry * 0.35 : 2;
+    return { x: n.x + (Math.random() - .5) * jx * 2, y: n.y + (Math.random() - .5) * jy * 2, node: n };
   });
+}
+// ==========================================
+// 巣の生成: 蛇行する縦穴 → 枝分かれする通路 → 用途別の部屋(左右に広く)
+// ==========================================
+const NEST_X = 1300, NEST_Y = 2400, QUEEN_Y = 150;
+const ROOM_TYPES = ['NURSERY', 'STORAGE', 'BARRACKS'];
+const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; return d; };
+const roomCount = t => { let c = 0; for (const n of nestNodes) if (n.type === t) c++; return c; };
+const nestArea = () => Math.floor(nestNodes.reduce((s, n) => s + n.r * n.r / 10, 0));
+const nurseryCap = n => Math.floor(n.r / 3) + 4;
+const barracksCap = n => Math.floor(n.r / 2.5) + 4;
+function broodCap() { let c = 6; for (const n of nestNodes) if (n.type === 'NURSERY') c += nurseryCap(n); return c; }
+function soldierCap() { let c = 3; for (const n of nestNodes) if (n.type === 'BARRACKS') c += barracksCap(n); return c; }
+const broodNow = () => ants.reduce((s, a) => s + (a.phase !== 'adult' ? 1 : 0), 0);
+const soldierUsed = () => state.soldiers + state.orders.soldier + ants.reduce((s, a) => s + (a.phase !== 'adult' && a.type === 'soldier' ? 1 : 0), 0);
+const maxDiggers = () => Math.min(12, 2 + Math.floor(state.miners / 2));
+
+function seedDigger(from) {
+  let c = from ? [from] : nestNodes.filter(n => n.type === 'TUNNEL' && n.y > QUEEN_Y && n.children.length <= 1 && Math.abs(n.x) < NEST_X);
+  if (!from) { const far = c.filter(n => Math.hypot(n.x, n.y - QUEEN_Y) > 160); if (far.length) c = far; }
+  const n = c.length ? c[Math.random() * c.length | 0] : nestNodes[0];
+  let dir = n.x > NEST_X * 0.7 ? -1 : n.x < -NEST_X * 0.7 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+  if (n.type === 'QUEEN') { seedDigger.flip = -(seedDigger.flip || 1); dir = seedDigger.flip; } // 女王室からは左右交互に掘り始める
+  const d = { node: n, dir, a: dir > 0 ? 0.35 : Math.PI - 0.35, drop: 0, since: 0, fail: 0, busy: false };
+  activeDiggers.push(d); return d;
 }
 function initNest() {
-  const queen = new NestNode(0, 0, 'QUEEN', null);
-  nestNodes.push(queen);
-  let prev = queen;
-  for (let y = -50; y > GROUND; y -= 50) { prev = new NestNode(0, y, 'TUNNEL', prev); nestNodes.push(prev); }
-  entrance = new NestNode(0, GROUND, 'ENTRANCE', prev); entrance.r = 9; nestNodes.push(entrance);
-  activeDiggers.push({ node: queen, angle: Math.PI / 2, busy: false });
-}
-// 見やすく整理された巣を生成。中央の幹から左右に部屋が並ぶレイアウト。
-function reformNest(silent = false) {
-  if (!silent && !confirm('巣の形を再形成しますか？\n地下に曲線的な主幹と、用途別の角丸四角い部屋を作ります。アリ・食料・進化・実績・創設時間は維持されます。')) return;
-  const oldSize = state.nestSize;
   nestNodes = []; activeDiggers = [];
-  const add = (x,y,type,parent,r) => { const n = new NestNode(x,y,type,parent); if (r) n.r=r; nestNodes.push(n); return n; };
-  // GROUND=-200。Yが-200より大きいほど地下側（画面下方向）。
-  // 女王室を地下深くに置き、地表入口(-200)へ曲がった通路で接続する。
-  const queen = add(0, 90, 'QUEEN', null, 105);
-  let up = queen;
-  const entrancePath = [
-    [-5, 45], [-18, 5], [-12, -35], [8, -75], [18, -112], [8, -150], [0, GROUND]
-  ];
-  for (const [x,y] of entrancePath) up = add(x,y,'TUNNEL',up,9);
-  entrance = add(0, GROUND, 'ENTRANCE', up, 12);
-
-  // 地下深部へゆるく蛇行する主幹。部屋は左右交互、枝も少し曲げる。
-  let trunk = queen;
-  const trunkPoints = [
-    [18,160],[32,225],[18,295],[-2,365],[-18,435],[-8,510],
-    [14,585],[28,660],[12,735],[-10,810],[-22,885],[-4,960],
-    [18,1035],[28,1110],[10,1185],[-12,1260],[0,1335],[18,1410]
-  ];
-  const roomDefs = [
-    {x:-230,y:210,type:'NURSERY',r:110,side:-1, bend:-22},
-    {x:245,y:330,type:'STORAGE',r:88,side:1,bend:24},
-    {x:-220,y:465,type:'BARRACKS',r:82,side:-1,bend:18},
-    {x:265,y:600,type:'NURSERY',r:118,side:1,bend:-20},
-    {x:-250,y:755,type:'STORAGE',r:96,side:-1,bend:-25},
-    {x:225,y:910,type:'BARRACKS',r:86,side:1,bend:22},
-    {x:-265,y:1070,type:'NURSERY',r:122,side:-1,bend:26},
-    {x:250,y:1240,type:'STORAGE',r:98,side:1,bend:-18},
-    {x:-210,y:1390,type:'BARRACKS',r:84,side:-1,bend:20}
-  ];
-  // trunk nodes and room branches are connected by parent links; no branch is above ground.
-  const trunkNodes = [];
-  for (const [x,y] of trunkPoints) { trunk = add(x,y,'TUNNEL',trunk,10); trunkNodes.push(trunk); }
-  roomDefs.forEach((room, i) => {
-    const near = trunkNodes.reduce((best,n) => Math.abs(n.y-room.y) < Math.abs(best.y-room.y) ? n : best, trunkNodes[0]);
-    const midX = room.x * 0.42 + room.bend;
-    let prev = add(near.x + room.bend, near.y + 18, 'TUNNEL', near, 10);
-    prev = add(midX, room.y - 24, 'TUNNEL', prev, 10);
-    prev = add(room.x - room.side * 42, room.y + 8, 'TUNNEL', prev, 10);
-    prev = add(room.x, room.y, 'TUNNEL', prev, 10);
-    add(room.x + room.side * 12, room.y + 4, room.type, prev, room.r);
+  const queen = new NestNode(0, QUEEN_Y, 'QUEEN', null); nestNodes.push(queen);
+  const N = Math.ceil((QUEEN_Y - GROUND) / 34), pts = [];
+  for (let i = 1; i < N; i++) { const t = i / N; pts.push([Math.sin(t * 5.2) * 16 * Math.min(1, t * 3, (1 - t) * 3 + 0.3), GROUND + (QUEEN_Y - GROUND) * t]); }
+  let prev = queen;
+  for (let i = pts.length - 1; i >= 0; i--) { prev = new NestNode(pts[i][0], pts[i][1], 'TUNNEL', prev); nestNodes.push(prev); }
+  entrance = new NestNode(0, GROUND, 'ENTRANCE', prev); nestNodes.push(entrance);
+  seedDigger(queen);
+}
+// 現在の個体数に合わせて、自然な形の巣を最初から掘り直す(アリ・食料・進化は維持)
+function regenerateNest(silent) {
+  if (!silent && !confirm('巣を作り直しますか？\n通路が枝分かれする自然な形に再生成します。アリ・食料・進化・実績は維持されます。')) return;
+  const keepSize = state.nestSize, target = clamp(keepSize * 0.4, 600, 4500);
+  const broods = ants.filter(a => a.phase !== 'adult').length;
+  const nN = Math.max(1, Math.ceil((broods + 10) / 14)), nB = Math.max(1, Math.ceil(state.soldiers * 1.2 / 14)), nS = Math.max(1, Math.round(target / 900));
+  const q = [];
+  for (let i = 0; i < nN; i++) q.push('NURSERY'); for (let i = 0; i < nS; i++) q.push('STORAGE'); for (let i = 0; i < nB; i++) q.push('BARRACKS');
+  for (let i = q.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [q[i], q[j]] = [q[j], q[i]]; }
+  initNest(); state.nestSize = nestArea(); state.digCount = 0; state.roomQueue = q;
+  for (let g = 0; g < 7000 && (state.roomQueue.length || state.nestSize < target); g++) {
+    if (!activeDiggers.length) seedDigger();
+    if (activeDiggers.length < 8 && Math.random() < 0.05) seedDigger();
+    digStep(activeDiggers[Math.random() * activeDiggers.length | 0], true);
+  }
+  state.roomQueue = []; state.nestSize = Math.max(keepSize, nestArea());
+  activeDiggers = []; for (let i = 0; i < Math.min(maxDiggers(), 4); i++) seedDigger();
+  const queen = nestNodes[0], nurs = nestNodes.filter(n => n.type === 'NURSERY');
+  ants.forEach(a => {
+    a.route = []; a.cb = null; a.dg = null; a.task = 'idle'; a.wait = 0; a.chase = false; a.carrier = null; a.claimed = false; a.digging = 0; a.carry = null;
+    const n = a.phase === 'adult' ? homeNode(a.type) : (nurs.length ? nurs[a.id % nurs.length] : queen);
+    a.node = n; a.x = n.x + (Math.random() - .5) * n.rx; a.y = n.y + (Math.random() - .5) * n.ry; a.moved = a.phase !== 'egg' || n !== queen;
   });
-  state.nestSize = Math.max(oldSize, Math.floor(nestNodes.reduce((sum,n)=>sum+n.r*n.r/10,0)));
-  activeDiggers.push({node:queen,angle:Math.PI/2,busy:false});
-  ants.forEach(a=>{a.node=queen;a.x=queen.x+(Math.random()-.5)*24;a.y=queen.y+(Math.random()-.5)*24;a.route=[];a.cb=null;a.dg=null;a.task='idle';a.wait=0;});
-  if(!silent){notify('🏰 曲線的な地下巣と角丸四角い部屋を再形成しました！');saveGame();}
+  if (!silent) { notify('🏰 巣を作り直しました！'); saveGame(); }
+}
+// 巣の維持管理(0.5秒ごと): 掘削担当の補充と、各部屋の利用数の集計
+let upkeepT = 0;
+function upkeep() {
+  if (!activeDiggers.length) seedDigger();
+  else if (activeDiggers.length < maxDiggers() && Math.random() < 0.35) seedDigger();
+  for (const n of nestNodes) n.use = 0;
+  for (const a of ants) {
+    if (a.carrier) continue;
+    if (a.phase !== 'adult') { if (a.node.type === 'NURSERY') a.node.use++; }
+    else if (a.type === 'soldier' && a.node.type === 'BARRACKS') a.node.use++;
+  }
 }
 
 function homeNode(type) {
   const pick = t => { const l = nestNodes.filter(n => n.type === t); return l.length ? l[Math.random() * l.length | 0] : nestNodes[0]; };
   return type === 'forager' ? pick('STORAGE') : type === 'soldier' ? pick('BARRACKS') : nestNodes[0];
 }
-function digStep(d) {
-  const p = d.node, dist = p.r * 0.7 + 15;
-  d.angle += (Math.random() - .5) * 1.8;
-  if (Math.sin(d.angle) < 0) d.angle += Math.PI;
-  const nx = p.x + Math.cos(d.angle) * dist, ny = p.y + Math.sin(d.angle) * dist, k = ++state.digCount;
-  let type = 'TUNNEL';
-  if (k === 3) type = 'NURSERY'; else if (k === 7) type = 'STORAGE'; else if (k === 11) type = 'BARRACKS';
-  else if (k > 11 && Math.random() < 0.18) { const r = Math.random(); type = r < .3 ? 'NURSERY' : r < .6 ? 'STORAGE' : 'BARRACKS'; }
-  const n = new NestNode(nx, ny, type, p);
-  nestNodes.push(n); state.nestSize += Math.floor(n.r * n.r / 10); d.node = n; digLog.push(T);
-  if (ny > 3000) activeDiggers.splice(activeDiggers.indexOf(d), 1);
-  if (activeDiggers.length < Math.min(8, 1 + Math.floor(state.miners / 2)) && Math.random() < 0.3) {
-    const c = nestNodes.filter(q => q.y >= 0);
-    activeDiggers.push({ node: c[Math.random() * c.length | 0], angle: Math.PI / 2 + (Math.random() - .5) * 2, busy: false });
+function digFree(x, y, cr, p) {
+  for (const n of nestNodes) {
+    if (n === p || n === p.parent) continue;
+    const m = cr + (n.isRoom() ? Math.max(n.rx, n.ry) * 0.95 : 10);
+    const dx = n.x - x, dy = n.y - y;
+    if (dx > m || dx < -m || dy > m || dy < -m) continue;
+    if (dx * dx + dy * dy < m * m) return false;
   }
+  return true;
+}
+// 面積に応じて、足りない種類の部屋を自動で増やす(育児室→食料庫→兵舎の順)
+function autoRoom() {
+  const rc = {}; let total = 0;
+  for (const t of ROOM_TYPES) { rc[t] = roomCount(t); total += rc[t]; }
+  if (total >= Math.floor(state.nestSize / 250) + 1) return null;
+  return ROOM_TYPES.slice().sort((a, b) => rc[a] - rc[b] || ROOM_TYPES.indexOf(a) - ROOM_TYPES.indexOf(b))[0];
+}
+// 掘削1ステップ: 水平方向を優先し、ときどき掘り下げ・枝分かれ・部屋づくりを行う
+function digStep(d, sim) {
+  const p = d.node; d.since++; state.digCount++;
+  if (d.drop > 0) d.drop--; else if (p.y < NEST_Y - 200 && Math.random() < 0.045) d.drop = 2 + (Math.random() * 3 | 0);
+  if (Math.abs(p.x) > NEST_X) { d.dir = p.x > 0 ? -1 : 1; d.drop = Math.max(d.drop, 2); }
+  let target = d.drop > 0 ? Math.PI / 2 + d.dir * 0.3 : (d.dir > 0 ? 0.1 : Math.PI - 0.1);
+  if (p.y < QUEEN_Y + 30) target = d.dir > 0 ? 0.5 : Math.PI - 0.5;
+  if (p.y > NEST_Y) target = d.dir > 0 ? -0.15 : Math.PI + 0.15;
+  d.a += angDiff(target, d.a) * 0.35 + (Math.random() - .5) * 0.7;
+  let type = null, fromQueue = false;
+  if (d.since >= 4 && p.type === 'TUNNEL' && p.y > QUEEN_Y + 20 && d.drop === 0) {
+    if (state.roomQueue.length) { type = state.roomQueue[0]; fromQueue = true; } else type = autoRoom();
+  }
+  const cr = type ? NODE_TYPES[type].r * 1.3 * 1.1 : 10;
+  const dist = type ? cr * 0.8 + 14 : (p.isRoom() ? Math.max(p.rx, p.ry) * 0.85 + 12 : 24 + Math.random() * 10);
+  let node = null;
+  for (let k = 0; k < 10 && !node; k++) {
+    const ang = d.a + (k ? (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.42 : 0);
+    const x = p.x + Math.cos(ang) * dist, y = p.y + Math.sin(ang) * dist;
+    if (y < QUEEN_Y - 10 || y > NEST_Y + 120 || Math.abs(x) > NEST_X + 160) continue;
+    if (digFree(x, y, cr, p)) { d.a = ang; node = new NestNode(x, y, type || 'TUNNEL', p); }
+  }
+  const idx = activeDiggers.indexOf(d);
+  if (!node) { // 行き止まり: 向きを変えて掘り下げ。何度も失敗したら担当を外す
+    d.dir *= -1; d.a = d.dir > 0 ? 0.3 : Math.PI - 0.3; d.drop = 3;
+    if (++d.fail > 4 && idx >= 0) activeDiggers.splice(idx, 1);
+    return null;
+  }
+  d.fail = 0;
+  nestNodes.push(node); state.nestSize += Math.floor(node.r * node.r / 10); d.node = node;
+  if (!sim) digLog.push(T);
+  if (type) { // 部屋ができたら掘削担当は交代。部屋からも通路を伸ばす
+    if (fromQueue) state.roomQueue.shift();
+    if (idx >= 0) activeDiggers.splice(idx, 1);
+    if (activeDiggers.length < (sim ? 8 : maxDiggers())) seedDigger(node);
+  } else if (activeDiggers.length < (sim ? 8 : maxDiggers()) && Math.random() < 0.11) {
+    const nd = seedDigger(node); nd.dir = -d.dir; nd.a = nd.dir > 0 ? 0.3 : Math.PI - 0.3; nd.drop = Math.random() < 0.4 ? 3 : 0;
+  }
+  return node;
 }
 function isUsed(n) { return ants.some(a => a.node === n || a.route.some(p => p.node === n) || (a.dg && a.dg.node === n)); }
 function collapse() {
-  if (Math.random() < 0.5) return;
-  const c = nestNodes.filter(n => n.type === 'TUNNEL' && !n.children.length && n.y > 40 && n.y < 800 && !isUsed(n));
+  if (Math.random() < 0.5 + 0.5 * EVO.collapse / (1 + EVO.collapse)) return;
+  const c = nestNodes.filter(n => n.type === 'TUNNEL' && !n.children.length && n.y > QUEEN_Y + 40 && n.y < 1200 && !isUsed(n));
   if (!c.length) return;
   const n = c[Math.random() * c.length | 0];
   n.parent.children.splice(n.parent.children.indexOf(n), 1);
@@ -376,11 +452,24 @@ function spawnRivals() {
 }
 // 産卵の指示: タップ → 食料を払って予約 → 女王が順に産む
 const queued = () => state.orders.miner + state.orders.forager + state.orders.soldier;
+function orderBlock(type) {
+  if (!state.firstFood) return '🐜 最初の採集アリが外から餌を運んでくるのを待ちましょう';
+  if (state.food < eggCost(type)) return '🍃 食料を集めるとアリを羽化させられます';
+  if (ants.length + queued() >= popCap()) return '🕳️ 収容力がいっぱいです。採掘アリが巣を広げるのを待ちましょう';
+  if (broodNow() + queued() >= broodCap()) return '🥚 育児室がいっぱいです。「部屋の増築」で育児室を作りましょう';
+  if (type === 'soldier' && soldierUsed() >= soldierCap()) return '🛏️ 兵舎が満員です。「部屋の増築」で兵舎を作りましょう';
+  return '';
+}
 function orderEgg(type) {
-  if (!state.firstFood) { notify('🍃 最初の採集アリが餌を巣に運ぶまで待ちましょう'); return; }
-  if (state.food < EGG_COST[type]) { notify('🍃 食料が足りません'); return; }
-  if (ants.length + queued() >= popCap()) { notify('🕳️ 収容力がいっぱいです。採掘アリで巣を広げましょう'); return; }
-  state.food -= EGG_COST[type]; state.orders[type]++; updateUI();
+  const b = orderBlock(type); if (b) { notify(b); return; }
+  state.food -= eggCost(type); state.orders[type]++; updateUI();
+}
+const roomCost = t => Math.round(ROOM_INFO[t].cost * Math.pow(1.2, roomCount(t) + state.roomQueue.filter(x => x === t).length));
+function buildRoom(t) {
+  if (!state.firstFood) { notify('🍃 最初の餌が届くまで待ちましょう'); return; }
+  if (state.miners < 1) { notify('⛏️ 部屋を掘る採掘アリがいません。先に採掘アリを羽化させましょう'); return; }
+  const c = roomCost(t); if (state.food < c) { notify('🍃 食料が足りません'); return; }
+  state.food -= c; state.roomQueue.push(t); notify(`${ROOM_INFO[t].icon} ${ROOM_INFO[t].name}の工事を指示しました。採掘アリが掘ります`); updateUI();
 }
 
 // ==========================================
@@ -399,19 +488,20 @@ class Ant {
   }
   sy() { return SURF - this.lane; }
   speed() {
-    let s = this.base * season().sp;
-    if (this.type === 'miner') s *= Math.min(3, Math.sqrt(state.minerMult));
+    const sp = season().sp, ss = sp < 1 ? 1 - (1 - sp) / (1 + EVO.winter) : sp;
+    let s = this.base * ss * (1 + EVO.walk);
+    if (this.type === 'miner') s *= Math.min(2.5, Math.sqrt(minerMult())) * (1 + EVO.minerWalk);
     if (this.carry) s *= 0.85;
     return s;
   }
   grow(dt) {
     if (this.carrier) return;
     if (this.phase === 'larva') {
-      const need = 0.4 * dt;
+      const need = 0.4 * dt / (1 + EVO.larvaFood);
       if (state.food < need) { this.hungry = true; return; }
       state.food -= need; this.hungry = false;
     }
-    this.timer -= dt;
+    this.timer -= dt * (1 + EVO.grow);
     if (this.timer > 0) return;
     if (this.phase === 'egg') { this.phase = 'larva'; this.timer = 5; }
     else if (this.phase === 'larva') { this.phase = 'pupa'; this.timer = 4; }
@@ -446,10 +536,10 @@ class Ant {
     if (this.y <= GROUND) trail.push({ x: this.x, y: this.y, s: 1 });
     if (trail.length > 3500) trail.shift();
   }
-  pickFood(it) { it.trips--; this.carry = 'food'; this.val = it.val; this.lx = this.x; this.ly = this.y; this.goHome(); }
+  pickFood(it) { it.trips--; this.carry = 'food'; this.val = Math.max(1, Math.round(it.val * (1 + EVO.carry))); this.lx = this.x; this.ly = this.y; this.goHome(); }
   scoutCheck() {
     if (this.y > GROUND) return;
-    const rad = 26 + 8 * (state.antLevel - 1);
+    const rad = 26 * (1 + EVO.scout);
     for (const it of items) if (it.trips > 0 && Math.abs(it.x - this.x) < rad) { this.route = []; this.cb = null; this.pickFood(it); return; }
   }
   update(dt) {
@@ -475,14 +565,14 @@ class Ant {
     this.think();
   }
   think() {
-    if (this.type === 'forager' && canGoOut()) {
+    if (this.type === 'forager' && canGoOut() && Math.random() < outChance()) {
       const cands = items.filter(i => i.trips > 0 && followable(i));
       if (cands.length) {
         const it = cands[Math.random() * cands.length | 0]; this.task = 'toFood';
         this.go(this.outPts().concat([{ x: it.x + (Math.random() - .5) * 10, y: this.sy() }]), () => { if (it.trips > 0) this.pickFood(it); else this.goHome(); });
         return;
       }
-      if (items.some(i => i.trips > 0) && Math.random() < 0.5) {
+      if (items.some(i => i.trips > 0) && Math.random() < Math.min(0.95, 0.5 + EVO.scoutProb)) {
         this.task = 'scout';
         const dir = Math.random() < .5 ? -1 : 1, pts = this.outPts(); let x = 0;
         for (let i = 0; i < 6; i++) { x = clamp(x + dir * (150 + Math.random() * 280) * (Math.random() < .15 ? -1 : 1), -WORLD + 60, WORLD - 60); pts.push({ x, y: this.sy() }); }
@@ -494,7 +584,7 @@ class Ant {
       const d = activeDiggers.find(d => !d.busy);
       if (d) {
         d.busy = true; this.task = 'dig';
-        this.go(nodePts(path(this.node, d.node)), () => { this.dg = d; this.digging = Math.max(0.3, 3 / state.minerMult); });
+        this.go(nodePts(path(this.node, d.node)), () => { this.dg = d; this.digging = Math.max(0.3, 3 / minerMult()); });
         return;
       }
     }
@@ -511,7 +601,7 @@ class Ant {
     });
   }
   tryCarry() {
-    const nurs = nestNodes.filter(n => n.type === 'NURSERY');
+    const nurs = nestNodes.filter(n => n.type === 'NURSERY' && n.use < nurseryCap(n));
     if (!nurs.length) return false;
     const e = ants.find(a => a.phase === 'egg' && !a.moved && !a.carrier && !a.claimed);
     if (!e) return false;
@@ -530,16 +620,22 @@ class Ant {
     return true;
   }
   wander() {
-    const n = this.node, o = [...n.children]; if (n.parent) o.push(n.parent);
+    const n = this.node; this.task = 'idle';
+    // 種類ごとの持ち場(兵隊は兵舎、採集は食料庫)へ戻って、しばらく休む
+    if (Math.random() < 0.4) {
+      const home = homeNode(this.type);
+      if (home !== n) { this.go(nodePts(path(n, home)), () => { this.wait = 3 + Math.random() * 6; this.task = 'idle'; }); return; }
+    }
+    const o = [...n.children]; if (n.parent) o.push(n.parent);
     const l = o.filter(x => x.type !== 'ENTRANCE');
-    this.task = 'idle'; this.wait = 0.5 + Math.random() * 2.5;
+    this.wait = 0.5 + Math.random() * 2.5;
     if (l.length && Math.random() < 0.6) this.go(nodePts([l[Math.random() * l.length | 0]]));
   }
   fight(dt) {
     const t = fightTarget(this);
     if (!t || t.hp <= 0) { this.chase = false; this.goHome(); return; }
     const tx = t.x + Math.cos(this.id * 2.4) * (t.isBoss ? 18 : 10), ty = SURF - (this.id % 4) * 3;
-    if (this.walk(tx, ty, dt, this.speed() * 1.3) === 0) { t.hp -= 5 * state.dmgMult * dt; this.angle = Math.atan2(GROUND - this.y, t.x - this.x); this.legT += dt * 14; }
+    if (this.walk(tx, ty, dt, this.speed() * 1.3 * (1 + EVO.fightSpeed)) === 0) { t.hp -= 5 * dmgMult() * dt; this.angle = Math.atan2(GROUND - this.y, t.x - this.x); this.legT += dt * 14; }
   }
 }
 
@@ -596,7 +692,7 @@ function clampCam() {
 function zoomAt(px, py, nz) { nz = clamp(nz, 0.12, 2.5); camX = px - (px - camX) * nz / z; camY = py - (py - camY) * nz / z; z = nz; clampCam(); }
 function viewSurface() { camX = W / 2; camY = H * 0.6 + 200 * z; clampCam(); }
 function viewFit() { z = clamp((W - 16) / (2 * (WORLD + 100)), 0.12, 2.5); camX = W / 2; camY = H * 0.62 + 200 * z; clampCam(); }
-function viewUnder() { camX = W / 2; camY = H * 0.3; clampCam(); }
+function viewUnder() { let a = 0, b = 0, m = QUEEN_Y; for (const n of nestNodes) { a = Math.min(a, n.x); b = Math.max(b, n.x); m = Math.max(m, n.y); } z = clamp(Math.min((W - 30) / (b - a + 260), (H - 30) / (m + 320)), 0.12, 1.4); camX = W / 2 - (a + b) / 2 * z; camY = 24 - GROUND * z; clampCam(); }
 resize(); z = 0.9; viewSurface();
 window.addEventListener('resize', () => { resize(); clampCam(); });
 
@@ -620,7 +716,7 @@ $('z-in').onclick = () => zoomAt(W / 2, H / 2, z * 1.3);
 $('z-out').onclick = () => zoomAt(W / 2, H / 2, z / 1.3);
 $('v-fit').onclick = viewFit;
 let underView = false;
-$('v-toggle').onclick = () => { underView = !underView; if (z < 0.4) z = 0.9; underView ? viewUnder() : viewSurface(); };
+$('v-toggle').onclick = () => { underView = !underView; if (underView) viewUnder(); else { z = 0.9; viewSurface(); } };
 function miniJump(e) { const r = mini.getBoundingClientRect(), wx = ((e.clientX - r.left) / r.width - 0.5) * 2 * (WORLD + 100); camX = W / 2 - wx * z; clampCam(); }
 mini.addEventListener('pointerdown', e => { mini.setPointerCapture(e.pointerId); miniJump(e); });
 mini.addEventListener('pointermove', e => { if (e.buttons) miniJump(e); });
@@ -663,9 +759,9 @@ const ACHIEVEMENTS = [
   ['forager_10','🍃','食料輸送隊','採集アリ10匹以上',m=>state.foragers>=10],
   ['soldier_1','⚔️','初めての兵隊','兵隊アリを1匹育てる',m=>state.soldiers>=1],
   ['soldier_10','🛡️','精鋭部隊','兵隊アリ10匹以上',m=>state.soldiers>=10],
-  ['evo_2','🧬','進化の兆し','いずれかの進化をLv2にする',m=>Math.max(state.clawLevel,state.mandLevel,state.antLevel)>=2],
-  ['evo_5','🧬','進化の研究者','いずれかの進化をLv5にする',m=>Math.max(state.clawLevel,state.mandLevel,state.antLevel)>=5],
-  ['evo_all2','🔬','三つの力','全進化をLv2以上にする',m=>state.clawLevel>=2&&state.mandLevel>=2&&state.antLevel>=2],
+  ['evo_2','🧬','進化の兆し','いずれかの進化をLv2にする',m=>Math.max(0,...EVOLUTIONS.map(e=>evoLevel(e.id)))>=2],
+  ['evo_5','🧬','進化の研究者','いずれかの進化をLv5にする',m=>Math.max(0,...EVOLUTIONS.map(e=>evoLevel(e.id)))>=5],
+  ['evo_all2','🔬','多彩な進化','10種類の進化を研究する',m=>EVOLUTIONS.filter(e=>evoLevel(e.id)>0).length>=10],
   ['battle_1','⚔️','初勝利','敵を1体討伐する',m=>m.battlesWon>=1],
   ['battle_3','⚔️','地上の脅威','敵を3体討伐する',m=>m.battlesWon>=3],
   ['battle_all','👑','地上制圧','すべての討伐対象を倒す',m=>state.enemyIndex>=ENEMIES.length],
@@ -706,14 +802,14 @@ function updateNestInfo(){
  const adults=state.miners+state.foragers+state.soldiers, brood=ants.filter(a=>a.phase!=='adult').length;
  metrics.peakPopulation=Math.max(metrics.peakPopulation,population());
  const set=(id,v)=>S(id,v);
- set('ni-age',fmtTime((Date.now()-(metrics.foundedAt||Date.now()))/1000));set('ni-days',`${Math.floor(T/DAY)+1}日目`);set('ni-pop',`${population()}匹`);set('ni-peak',`${metrics.peakPopulation}匹`);set('ni-workers',`${adults}匹`);set('ni-totalworkers',`${metrics.totalWorkers}匹`);set('ni-queued',`${queued()}個`);set('ni-size',`${state.nestSize.toLocaleString()} cm²`);set('ni-nodes',nestNodes.length);set('ni-digs',`${state.digCount}回`);set('ni-food',Math.floor(metrics.foodCollected).toLocaleString());set('ni-rivals',`${metrics.totalRivalKills}匹`);set('ni-battles',`${metrics.battlesWon}体`);set('ni-evo',state.clawLevel+state.mandLevel+state.antLevel);set('ni-foragers',`${state.foragers}匹`);set('ni-miners',`${state.miners}匹`);set('ni-soldiers',`${state.soldiers}匹`);set('ni-brood',`${brood}匹`);
+ set('ni-age',fmtTime((Date.now()-(metrics.foundedAt||Date.now()))/1000));set('ni-days',`${Math.floor(T/DAY)+1}日目`);set('ni-pop',`${population()}匹`);set('ni-peak',`${metrics.peakPopulation}匹`);set('ni-workers',`${adults}匹`);set('ni-totalworkers',`${metrics.totalWorkers}匹`);set('ni-queued',`${queued()}個`);set('ni-size',`${state.nestSize.toLocaleString()} cm²`);set('ni-nodes',nestNodes.length);set('ni-digs',`${state.digCount}回`);set('ni-food',Math.floor(metrics.foodCollected).toLocaleString());set('ni-rivals',`${metrics.totalRivalKills}匹`);set('ni-battles',`${metrics.battlesWon}体`);set('ni-evo',totalEvoLevels());set('ni-foragers',`${state.foragers}匹`);set('ni-miners',`${state.miners}匹`);set('ni-soldiers',`${state.soldiers}匹`);set('ni-brood',`${brood}匹`);
 }
 function saveGame(){
  if(loadingSave) return;
  try{
   const nodeIds=new Map(nestNodes.map((n,i)=>[n,i]));
-  const data={version:3,savedAt:Date.now(),state,env,T,metrics,
-   nodes:nestNodes.map(n=>({x:n.x,y:n.y,type:n.type,r:n.r,parent:n.parent?nodeIds.get(n.parent):-1})),
+  const data={version:3,nestStyle:2,savedAt:Date.now(),state,env,T,metrics,
+   nodes:nestNodes.map(n=>({x:n.x,y:n.y,type:n.type,r:n.r,s:n.seed,tw:n.tw,b:n.bend,parent:n.parent?nodeIds.get(n.parent):-1})),
    ants:ants.map(a=>({type:a.type,node:nodeIds.get(a.node)||0,x:a.x,y:a.y,phase:a.phase,timer:a.timer,moved:a.moved,hungry:a.hungry,angle:a.angle,carry:a.carry,val:a.val,wait:a.wait,digging:a.digging,base:a.base,legT:a.legT,lane:a.lane})),
    items,trail,rivals,boss,underView};
   localStorage.setItem(SAVE_KEY,JSON.stringify(data)); lastSaveAt=Date.now();
@@ -726,14 +822,16 @@ function loadGame(){
   const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const d=JSON.parse(raw);if(!d||d.version!==3)return false;
   loadingSave=true;Object.assign(state,d.state||{});state.evolutions=state.evolutions||{};Object.assign(env,d.env||{});T=Number(d.T)||15;Object.assign(metrics,d.metrics||{});metrics.achievements=metrics.achievements||{};
   nestNodes=[];activeDiggers=[];const nodes=d.nodes||[];
-  for(const nd of nodes){const n=new NestNode(nd.x,nd.y,nd.type,null);n.r=nd.r;nestNodes.push(n);}
+  for(const nd of nodes){const n=new NestNode(nd.x,nd.y,nd.type,null);n.r=nd.r;if(nd.s!=null)n.seed=nd.s;if(nd.tw)n.tw=nd.tw;if(nd.b!=null)n.bend=nd.b;n.setShape();nestNodes.push(n);}
   nodes.forEach((nd,i)=>{if(nd.parent>=0&&nestNodes[nd.parent]){nestNodes[i].parent=nestNodes[nd.parent];nestNodes[nd.parent].children.push(nestNodes[i]);}});
   if(!nestNodes.length){initNest();} else {entrance=nestNodes.find(n=>n.type==='ENTRANCE')||nestNodes[nestNodes.length-1];}
   ants=[];state.miners=0;state.foragers=0;state.soldiers=0;
   for(const ad of (d.ants||[])){const a=new Ant(ad.type,nestNodes[ad.node]||nestNodes[0]);Object.assign(a,ad);a.node=nestNodes[ad.node]||nestNodes[0];a.route=[];a.cb=null;a.dg=null;a.carrier=null;a.chase=false;a.task='idle';a.wait=0; if(a.phase==='adult')state[a.type+'s']++;ants.push(a);}
   antId=Math.max(antId,...ants.map(a=>a.id||0));items=d.items||items;trail=d.trail||[];rivals=d.rivals||[];boss=d.boss||null;underView=!!d.underView;
   if(!metrics.foundedAt)metrics.foundedAt=Date.now();
-  activeDiggers=[];const digNodes=nestNodes.filter(n=>n.type!=='ENTRANCE');const digCount=Math.min(8,Math.max(1,1+Math.floor(state.miners/2)));for(let i=0;i<digCount;i++){const n=i===0?nestNodes[0]:digNodes[Math.max(0,digNodes.length-1-i)];if(n)activeDiggers.push({node:n,angle:Math.PI/2,busy:false});}
+  { const ev=state.evolutions=state.evolutions||{}; if(state.clawLevel>1&&!ev.claw)ev.claw=state.clawLevel-1; if(state.mandLevel>1&&!ev.mand)ev.mand=state.mandLevel-1; if(state.antLevel>1&&!ev.ant)ev.ant=state.antLevel-1; recalcEvo(); }
+  state.roomQueue=[];
+  if(d.nestStyle!==2){regenerateNest(true);} else {activeDiggers=[];for(let i=0;i<Math.min(maxDiggers(),4);i++)seedDigger();}
   loadingSave=false;return true;
  }catch(e){loadingSave=false;console.warn('Load failed',e);return false;}
 }
@@ -755,7 +853,7 @@ $('save-file-input').onchange=async ev=>{
   }catch(e){alert('読み込みに失敗しました。正しいアリ帝国のJSONか確認してください。\n'+e.message);}finally{ev.target.value='';}
 };
 $('btn-reset').onclick=resetGame;
-$('btn-reform-nest').onclick=()=>reformNest(false);
+$('btn-reform-nest').onclick=()=>regenerateNest(false);
 window.addEventListener('pagehide',saveGame);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveGame();});
 setInterval(saveGame,5000);
 
@@ -768,71 +866,117 @@ document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
   if (b.dataset.tab === 'achievements') renderAchievements();
 });
 ['miner', 'forager', 'soldier'].forEach(k => { $('btn-lay-' + k).onclick = () => orderEgg(k); });
-function upgrade(key, field, mult, fn) {
-  $('btn-' + key).onclick = () => {
-    if (state.food < state.costs[key]) return;
-    state.food -= state.costs[key]; state[field]++; state.costs[key] = Math.floor(state.costs[key] * mult); fn(); updateUI();
-  };
-}
+const EVO_MAX = 20;
+const EVO_CATS = { forage: '🍃 採集', dig: '⛏️ 採掘', war: '⚔️ 戦闘', brood: '🥚 繁殖', env: '🌦️ 環境', special: '✨ 特殊' };
+const FX_LABEL = { scout: '餌の発見範囲', trail: '道しるべの持続', carry: '搬入量', walk: '移動速度', scoutProb: '探索頻度', foodSpawn: '餌の出現頻度', dig: '掘削速度', minerWalk: '採掘アリの足', collapse: '崩落しにくさ', cap: '収容力', dmg: '攻撃力', fightSpeed: '戦闘時の速度', rivalReward: '防衛報酬', bossReward: '討伐報酬', lay: '産卵速度', grow: '成長速度', larvaFood: '幼虫の食費削減', eggcost: '卵のコスト削減', nightOut: '夜の活動', rainOut: '雨の活動', winter: '冬の動き', all: '採掘・戦闘・搬入・移動', adapt: '全進化の効果' };
 const EVOLUTIONS = [
- {id:'claw',icon:'🪨',name:'鋭利な爪',desc:'採掘効率が上昇',base:300,growth:1.8},
- {id:'mand',icon:'🦷',name:'強靭な大顎',desc:'兵隊アリの攻撃力が上昇',base:200,growth:1.8},
- {id:'ant',icon:'📡',name:'鋭敏な触角',desc:'餌の発見範囲が上昇',base:150,growth:1.7},
- {id:'carapace',icon:'🛡️',name:'硬質外骨格',desc:'戦闘での耐久力が上昇',base:350,growth:1.9},
- {id:'pheromone',icon:'💨',name:'フェロモン強化',desc:'採集アリの効率が上昇',base:250,growth:1.8},
- {id:'enzyme',icon:'🧪',name:'消化酵素',desc:'食料の獲得量が上昇',base:400,growth:1.9},
- {id:'mandible',icon:'⚔️',name:'二重大顎',desc:'戦闘力がさらに上昇',base:500,growth:2.0},
- {id:'vision',icon:'👁️',name:'複眼の発達',desc:'探索能力が上昇',base:280,growth:1.8},
- {id:'legs',icon:'🦵',name:'高速歩行脚',desc:'移動速度が上昇',base:320,growth:1.8},
- {id:'memory',icon:'🧠',name:'記憶能力',desc:'餌場を見失いにくくなる',base:450,growth:1.9},
- {id:'queen',icon:'👑',name:'女王の繁殖力',desc:'繁殖効率が上昇',base:600,growth:2.0},
- {id:'brood',icon:'🥚',name:'幼虫育成術',desc:'幼虫の成長が速くなる',base:550,growth:1.9},
- {id:'hygiene',icon:'🧹',name:'巣の衛生管理',desc:'幼虫の生存力が上昇',base:480,growth:1.8},
- {id:'wax',icon:'🧱',name:'土壁補強',desc:'巣の耐久性が上昇',base:520,growth:1.9},
- {id:'tunnel',icon:'🕳️',name:'高速掘削',desc:'巣の拡張速度が上昇',base:380,growth:1.8},
- {id:'storage',icon:'🏺',name:'貯蔵能力',desc:'食料の保管効率が上昇',base:420,growth:1.8},
- {id:'scout',icon:'🧭',name:'斥候本能',desc:'危険を早く察知する',base:360,growth:1.8},
- {id:'alarm',icon:'🚨',name:'警戒フェロモン',desc:'侵入者への反応が上昇',base:500,growth:1.9},
- {id:'formation',icon:'🪖',name:'集団戦術',desc:'兵隊アリの連携が上昇',base:700,growth:2.0},
- {id:'venom',icon:'☠️',name:'毒性分泌',desc:'攻撃力が上昇',base:850,growth:2.1},
- {id:'armor',icon:'🔰',name:'装甲プレート',desc:'防御力が上昇',base:800,growth:2.0},
- {id:'night',icon:'🌙',name:'夜間活動',desc:'夜間の活動効率が上昇',base:650,growth:1.9},
- {id:'rain',icon:'🌧️',name:'耐水性',desc:'雨天時の活動力が上昇',base:620,growth:1.9},
- {id:'thermo',icon:'🌡️',name:'温度適応',desc:'環境変化への耐性が上昇',base:750,growth:2.0},
- {id:'cooperation',icon:'🤝',name:'協調行動',desc:'ワーカーの作業効率が上昇',base:900,growth:2.0},
- {id:'biofuel',icon:'🍃',name:'代謝最適化',desc:'食料効率が上昇',base:1000,growth:2.0},
- {id:'recycle',icon:'♻️',name:'資源再利用',desc:'資源の無駄を減らす',base:1100,growth:2.0},
- {id:'royal',icon:'💎',name:'王族の血統',desc:'コロニー全体の能力が上昇',base:1500,growth:2.2},
- {id:'adapt',icon:'🧬',name:'急速適応',desc:'進化の効果がさらに上昇',base:2000,growth:2.2},
- {id:'overmind',icon:'🌌',name:'超個体意識',desc:'すべての作業・戦闘能力が上昇',base:5000,growth:2.5}
+ {c:'forage',id:'ant',icon:'📡',name:'鋭敏な触角',desc:'餌を見つけられる範囲が広がる',base:150,growth:1.7,fx:{scout:.25}},
+ {c:'forage',id:'vision',icon:'👁️',name:'複眼の発達',desc:'餌を見つけられる範囲が広がる',base:280,growth:1.8,fx:{scout:.2}},
+ {c:'forage',id:'pheromone',icon:'💨',name:'フェロモン強化',desc:'餌場への道しるべが長持ちする',base:250,growth:1.8,fx:{trail:.3}},
+ {c:'forage',id:'memory',icon:'🧠',name:'記憶能力',desc:'餌場への道しるべがさらに長持ちする',base:450,growth:1.9,fx:{trail:.25}},
+ {c:'forage',id:'enzyme',icon:'🧪',name:'消化酵素',desc:'1回に運ぶ食料が増える',base:400,growth:1.9,fx:{carry:.08}},
+ {c:'forage',id:'carrier',icon:'🦷',name:'運搬の顎',desc:'1回に運ぶ食料が増える',base:360,growth:1.85,fx:{carry:.06}},
+ {c:'forage',id:'storage',icon:'🏺',name:'貯蔵能力',desc:'1回に運ぶ食料が増える',base:420,growth:1.8,fx:{carry:.05}},
+ {c:'forage',id:'biofuel',icon:'⚗️',name:'代謝最適化',desc:'1回に運ぶ食料が増える',base:1000,growth:2.0,fx:{carry:.06}},
+ {c:'forage',id:'fungi',icon:'🍄',name:'菌園栽培',desc:'1回に運ぶ食料が増える',base:1600,growth:2.0,fx:{carry:.07}},
+ {c:'forage',id:'legs',icon:'🦵',name:'高速歩行脚',desc:'全アリの移動速度が上がる',base:320,growth:1.8,fx:{walk:.05}},
+ {c:'forage',id:'scout',icon:'🧭',name:'斥候本能',desc:'餌を探しに出る頻度が上がる',base:360,growth:1.8,fx:{scoutProb:.05}},
+ {c:'forage',id:'harvest',icon:'🌾',name:'収穫術',desc:'地上に餌が出現する頻度が上がる',base:600,growth:1.9,fx:{foodSpawn:.08}},
+ {c:'forage',id:'symbiosis',icon:'🐛',name:'アブラムシとの共生',desc:'餌の出現頻度と搬入量が上がる',base:1200,growth:2.0,fx:{foodSpawn:.06,carry:.03}},
+ {c:'dig',id:'claw',icon:'🪨',name:'鋭利な爪',desc:'掘削が速くなる',base:300,growth:1.8,fx:{dig:.15}},
+ {c:'dig',id:'tunnel',icon:'🕳️',name:'高速掘削',desc:'掘削が速くなる',base:380,growth:1.8,fx:{dig:.12}},
+ {c:'dig',id:'spade',icon:'🧱',name:'土砂運搬術',desc:'採掘アリの足が速くなる',base:340,growth:1.8,fx:{minerWalk:.06}},
+ {c:'dig',id:'cooperation',icon:'🤝',name:'協調行動',desc:'掘削速度と搬入量が上がる',base:900,growth:2.0,fx:{dig:.04,carry:.04}},
+ {c:'dig',id:'wax',icon:'🏗️',name:'土壁補強',desc:'雨で通路が崩れにくくなる',base:520,growth:1.9,fx:{collapse:.1}},
+ {c:'dig',id:'drain',icon:'💧',name:'排水路',desc:'雨で通路が崩れにくくなる',base:560,growth:1.9,fx:{collapse:.08}},
+ {c:'dig',id:'vent',icon:'🌬️',name:'換気孔',desc:'巣の収容力が増える',base:700,growth:1.9,fx:{cap:.04}},
+ {c:'dig',id:'chamber',icon:'📐',name:'巣室設計',desc:'巣の収容力が増える',base:900,growth:1.9,fx:{cap:.05}},
+ {c:'war',id:'mand',icon:'🦷',name:'強靭な大顎',desc:'兵隊アリの攻撃力が上がる',base:200,growth:1.8,fx:{dmg:.2}},
+ {c:'war',id:'mandible',icon:'⚔️',name:'二重大顎',desc:'兵隊アリの攻撃力が上がる',base:500,growth:2.0,fx:{dmg:.25}},
+ {c:'war',id:'venom',icon:'☠️',name:'毒性分泌',desc:'兵隊アリの攻撃力が上がる',base:850,growth:2.1,fx:{dmg:.3}},
+ {c:'war',id:'formation',icon:'🪖',name:'集団戦術',desc:'兵隊アリの攻撃力が上がる',base:700,growth:2.0,fx:{dmg:.15}},
+ {c:'war',id:'carapace',icon:'🛡️',name:'硬質外骨格',desc:'重い甲殻の体当たりで攻撃力が上がる',base:350,growth:1.9,fx:{dmg:.08}},
+ {c:'war',id:'armor',icon:'🔰',name:'装甲プレート',desc:'装甲を活かした突撃で攻撃力が上がる',base:800,growth:2.0,fx:{dmg:.08}},
+ {c:'war',id:'alarm',icon:'🚨',name:'警戒フェロモン',desc:'敵に向かう速度が上がる',base:500,growth:1.9,fx:{fightSpeed:.08}},
+ {c:'war',id:'charge',icon:'💥',name:'突撃本能',desc:'敵に向かう速度が上がる',base:650,growth:1.9,fx:{fightSpeed:.06}},
+ {c:'war',id:'plunder',icon:'🎁',name:'戦利品回収',desc:'他コロニー撃退の報酬が増える',base:600,growth:1.9,fx:{rivalReward:.1}},
+ {c:'war',id:'siege',icon:'🏹',name:'攻城術',desc:'外敵討伐の報酬が増える',base:1100,growth:2.0,fx:{bossReward:.15}},
+ {c:'brood',id:'queen',icon:'👑',name:'女王の繁殖力',desc:'女王が卵を産む速さが上がる',base:600,growth:2.0,fx:{lay:.1}},
+ {c:'brood',id:'fecund',icon:'🥚',name:'多産の血',desc:'女王が卵を産む速さが上がる',base:900,growth:2.0,fx:{lay:.08}},
+ {c:'brood',id:'brood',icon:'🐛',name:'幼虫育成術',desc:'卵・幼虫・蛹の成長が速くなる',base:550,growth:1.9,fx:{grow:.08}},
+ {c:'brood',id:'nurse',icon:'🍼',name:'保育係の熟練',desc:'卵・幼虫・蛹の成長が速くなる',base:480,growth:1.9,fx:{grow:.05}},
+ {c:'brood',id:'hygiene',icon:'🧹',name:'巣の衛生管理',desc:'成長が速くなり、幼虫の食費も減る',base:480,growth:1.8,fx:{grow:.04,larvaFood:.03}},
+ {c:'brood',id:'feed',icon:'🥣',name:'栄養交換',desc:'幼虫が消費する食料が減る',base:520,growth:1.9,fx:{larvaFood:.05}},
+ {c:'brood',id:'royaljelly',icon:'🍯',name:'栄養卵',desc:'羽化に必要な食料が減る',base:800,growth:2.0,fx:{eggcost:.05}},
+ {c:'brood',id:'colonyplan',icon:'🗺️',name:'都市計画',desc:'巣の収容力が増える',base:1000,growth:2.0,fx:{cap:.06}},
+ {c:'env',id:'night',icon:'🌙',name:'夜間活動',desc:'夜も外に出られる(Lv1で解禁、Lvが高いほど積極的)',base:650,growth:1.9,fx:{nightOut:.08}},
+ {c:'env',id:'rain',icon:'🌧️',name:'耐水性',desc:'雨でも外に出られる(Lv1で解禁、Lvが高いほど積極的)',base:620,growth:1.9,fx:{rainOut:.08}},
+ {c:'env',id:'thermo',icon:'🌡️',name:'温度適応',desc:'冬の動きの鈍さが和らぐ',base:750,growth:2.0,fx:{winter:.15}},
+ {c:'special',id:'royal',icon:'💎',name:'王族の血統',desc:'採掘・戦闘・搬入・移動がまとめて上がる',base:1500,growth:2.2,fx:{all:.03}},
+ {c:'special',id:'genome',icon:'🧬',name:'ゲノム解析',desc:'採掘・戦闘・搬入・移動がまとめて上がる',base:3000,growth:2.3,fx:{all:.02}},
+ {c:'special',id:'overmind',icon:'🌌',name:'超個体意識',desc:'採掘・戦闘・搬入・移動がまとめて上がる',base:5000,growth:2.5,fx:{all:.05}},
+ {c:'special',id:'adapt',icon:'🔬',name:'急速適応',desc:'他のすべての進化の効果が強まる',base:2000,growth:2.2,fx:{adapt:.04}}
 ];
-
-function evoLevel(id){ return Number((state.evolutions||{})[id]||0); }
-function evoCost(e){ return Math.floor(e.base*Math.pow(e.growth,evoLevel(e.id))); }
-function renderEvolutions(){
- const host=$('evolution-list'); if(!host)return;
- host.innerHTML=EVOLUTIONS.map(e=>{const lv=evoLevel(e.id),cost=evoCost(e);return `<div class="card up"><div class="ic">${e.icon}</div><div class="tx"><b>${e.name} Lv${lv}</b><small>${e.desc} ・ 最大Lv20</small></div><button class="btn ${state.food<cost?'dis':''}" data-evo-buy="${e.id}">🍃 ${cost.toLocaleString()}</button></div>`}).join('');
- host.querySelectorAll('[data-evo-buy]').forEach(btn=>btn.onclick=()=>buyEvolution(btn.dataset.evoBuy));
- const total=EVOLUTIONS.reduce((n,e)=>n+evoLevel(e.id),0)+state.clawLevel+state.mandLevel+state.antLevel;
- S('evo-total-level',total);S('evo-unlocked-count',`${EVOLUTIONS.filter(e=>evoLevel(e.id)>0).length} / ${EVOLUTIONS.length}`);
+const ALL4 = ['dig', 'dmg', 'carry', 'walk'];
+function evoLevel(id) { return Number((state.evolutions || {})[id] || 0); }
+function evoCost(e) { return Math.floor(e.base * Math.pow(e.growth, evoLevel(e.id))); }
+function totalEvoLevels() { return EVOLUTIONS.reduce((n, e) => n + evoLevel(e.id), 0); }
+function recalcEvo() {
+  for (const k of Object.keys(EVO_T)) delete EVO_T[k];
+  const raw = {};
+  for (const e of EVOLUTIONS) {
+    const lv = evoLevel(e.id); if (!lv) continue;
+    for (const [k, v] of Object.entries(e.fx)) { if (k === 'all') ALL4.forEach(s => raw[s] = (raw[s] || 0) + v * lv); else raw[k] = (raw[k] || 0) + v * lv; }
+  }
+  const boost = 1 + (raw.adapt || 0);
+  for (const k in raw) EVO_T[k] = k === 'adapt' ? raw[k] : raw[k] * boost;
 }
-function buyEvolution(id){
- const e=EVOLUTIONS.find(x=>x.id===id);if(!e)return;
- const lv=evoLevel(id),cost=evoCost(e);
- if(lv>=20){notify('この進化は最大レベルです');return;}
- if(state.food<cost){notify('食料が足りません');return;}
- state.food-=cost;state.evolutions=state.evolutions||{};state.evolutions[id]=lv+1;
- // 進化効果は既存のゲーム計算にも反映
- if(['claw','tunnel'].includes(id)){state.minerMult*=1.12;}
- if(['mand','mandible','venom','formation','overmind','royal'].includes(id)){state.dmgMult*=1.10;}
- notify(`${e.icon} ${e.name} が Lv${lv+1} に進化！`);
- renderEvolutions();updateUI();saveGame();
+function fxLine(e, lv) {
+  const boost = 1 + EVO.adapt;
+  return Object.entries(e.fx).map(([k, v]) => {
+    if (k === 'nightOut' || k === 'rainOut') return `${FX_LABEL[k]}: ${lv ? '解禁済み' : '未解禁'}`;
+    const per = Math.round(v * 100 * (k === 'adapt' ? 1 : 1) * 10) / 10;
+    return `${FX_LABEL[k]} +${per}%/Lv ・ 現在 +${Math.round(v * lv * (k === 'adapt' ? 1 : boost) * 1000) / 10}%`;
+  }).join(' / ');
 }
-
-upgrade('claw', 'clawLevel', 3, () => state.minerMult *= 2);
-upgrade('mand', 'mandLevel', 2.5, () => state.dmgMult *= 1.5);
-upgrade('ant', 'antLevel', 2.2, () => {});
-renderEvolutions();
+let evoFilter = 'all';
+function renderEvolutions() {
+  const host = $('evolution-list'); if (!host) return;
+  const fh = $('evo-filter');
+  if (fh && !fh.children.length) {
+    fh.innerHTML = [['all', 'すべて']].concat(Object.entries(EVO_CATS)).map(([k, n]) => `<button class="fchip" data-f="${k}">${n}</button>`).join('');
+    fh.onclick = ev => { const b = ev.target.closest('.fchip'); if (!b) return; evoFilter = b.dataset.f; renderEvolutions(); };
+  }
+  if (fh) fh.querySelectorAll('.fchip').forEach(b => b.classList.toggle('on', b.dataset.f === evoFilter));
+  let html = '', lastC = '';
+  for (const e of EVOLUTIONS) {
+    if (evoFilter !== 'all' && e.c !== evoFilter) continue;
+    if (evoFilter === 'all' && e.c !== lastC) { lastC = e.c; html += `<div class="evo-sec">${EVO_CATS[e.c]}</div>`; }
+    const lv = evoLevel(e.id), cost = evoCost(e), max = lv >= EVO_MAX;
+    html += `<div class="card up"><div class="ic">${e.icon}</div><div class="tx"><b>${e.name} <span style="color:var(--acc2)">Lv${lv}</span></b><small>${e.desc}</small><small style="color:var(--acc2)">${fxLine(e, lv)}</small></div><button class="btn ${!max && state.food < cost ? 'dis' : ''}" data-evo-buy="${e.id}" ${max ? 'disabled' : ''}>${max ? 'MAX' : '🍃 ' + cost.toLocaleString()}</button></div>`;
+  }
+  host.innerHTML = html;
+  host.querySelectorAll('[data-evo-buy]').forEach(btn => btn.onclick = () => buyEvolution(btn.dataset.evoBuy));
+  S('evo-total-level', totalEvoLevels()); S('evo-unlocked-count', `${EVOLUTIONS.filter(e => evoLevel(e.id) > 0).length} / ${EVOLUTIONS.length}`);
+}
+function refreshEvoButtons() {
+  if (!$('tab-evolve').classList.contains('on')) return;
+  document.querySelectorAll('[data-evo-buy]').forEach(btn => {
+    const e = EVOLUTIONS.find(x => x.id === btn.dataset.evoBuy); if (!e) return;
+    btn.classList.toggle('dis', evoLevel(e.id) < EVO_MAX && state.food < evoCost(e));
+  });
+}
+function buyEvolution(id) {
+  const e = EVOLUTIONS.find(x => x.id === id); if (!e) return;
+  const lv = evoLevel(id), cost = evoCost(e);
+  if (lv >= EVO_MAX) { notify('この進化は最大レベルです'); return; }
+  if (state.food < cost) { notify('🍃 食料が足りません'); return; }
+  state.food -= cost; state.evolutions = state.evolutions || {}; state.evolutions[id] = lv + 1;
+  recalcEvo();
+  notify(`${e.icon} ${e.name} が Lv${lv + 1} に進化！`);
+  renderEvolutions(); updateUI(); saveGame();
+}
+['NURSERY', 'STORAGE', 'BARRACKS'].forEach(t => { $('btn-room-' + t).onclick = () => buildRoom(t); });
 $('btn-battle').onclick = () => {
   if (state.soldiers > 0 && !state.inBattle && state.enemyIndex < ENEMIES.length) {
     const e = ENEMIES[state.enemyIndex];
@@ -853,15 +997,20 @@ function updateUI() {
   S('h-clock', `${isNight() ? '🌙' : '☀️'} ${hh}:${String(mm).padStart(2, '0')}`);
   S('h-env', `${Math.floor(T / DAY) + 1}日目 ${season().n}${env.raining ? ' 🌧️' : ''}`);
   S('pop-n', adults + brood); S('pop-cap', cap); $('pop-bar').style.width = clamp((adults + brood) / cap * 100, 0, 100) + '%';
-  const full = ants.length + queued() >= cap;
   for (const k of ['miner', 'forager', 'soldier']) {
-    S('c-' + k, state[k + 's']); S('q-' + k, state.orders[k]); S('cost-' + k, EGG_COST[k]);
-    $('btn-lay-' + k).classList.toggle('dis', !state.firstFood || state.food < EGG_COST[k] || full);
+    S('c-' + k, state[k + 's']); S('q-' + k, state.orders[k]); S('cost-' + k, eggCost(k));
+    $('btn-lay-' + k).classList.toggle('dis', !!orderBlock(k));
   }
-  S('lay-hint', !state.firstFood ? '🐜 最初の採集アリが外から餌を運んでくるのを待ちましょう' : full ? '収容力がいっぱいです。採掘アリで巣を広げると増やせます' : state.food < Math.min(...Object.values(EGG_COST)) ? '🍃 食料を集めるとアリを羽化させられます' : '👇 増やしたいアリの「羽化」ボタンをタップ！');
-  S('st-dig', Math.round(dig)); S('st-food', inc.toFixed(1)); S('st-comb', Math.round(state.soldiers * 5 * state.dmgMult));
+  const blocks = ['miner', 'forager', 'soldier'].map(orderBlock);
+  S('lay-hint', blocks.every(b => b) ? blocks[1] || blocks[0] : '👇 増やしたいアリの「羽化」ボタンをタップ！');
+  for (const t of ROOM_TYPES) {
+    S('rm-n-' + t, roomCount(t)); S('rm-q-' + t, state.roomQueue.filter(x => x === t).length); S('rm-cost-' + t, roomCost(t));
+    $('btn-room-' + t).classList.toggle('dis', state.food < roomCost(t) || state.miners < 1);
+  }
+  S('rm-c-NURSERY', `${broodNow()}/${broodCap()}`); S('rm-c-BARRACKS', `${soldierUsed()}/${soldierCap()}`); S('rm-c-STORAGE', Math.floor(state.food).toLocaleString());
+  refreshEvoButtons();
+  S('st-dig', Math.round(dig)); S('st-food', inc.toFixed(1)); S('st-comb', Math.round(state.soldiers * 5 * dmgMult()));
   S('st-brood', brood); S('st-hungry', hungry); S('st-mound', state.mound);
-  for (const k of ['claw', 'mand', 'ant']) { S('lv-' + k, state[k + 'Level']); S('cost-' + k, state.costs[k].toLocaleString()); $('btn-' + k).classList.toggle('dis', state.food < state.costs[k]); }
   // 戦闘パネル
   if (state.enemyIndex >= ENEMIES.length) { S('enemy-emoji', '👑'); S('enemy-name', '地上を完全に制圧した！'); $('btn-battle').classList.add('hidden'); }
   else {
@@ -870,14 +1019,14 @@ function updateUI() {
     $('enemy-hp-bar').style.width = hp / e.hp * 100 + '%';
     $('btn-battle').classList.toggle('hidden', state.inBattle); $('battle-status').classList.toggle('hidden', !state.inBattle);
     $('btn-battle').disabled = state.soldiers < 1;
-    const dps = 5 * state.dmgMult;
+    const dps = 5 * dmgMult();
     const needed = Math.max(1, Math.ceil((e.hp / Math.max(1,dps*20))*1.5));
     S('enemy-needed', `${needed}匹以上`); S('enemy-own-soldiers', `${state.soldiers}匹`);
     S('enemy-damage', `${dps.toFixed(1)} / 秒`);
     S('enemy-winchance', state.soldiers >= needed ? '高め' : state.soldiers >= Math.ceil(needed*.6) ? '五分未満' : '低い');
   }
   const rivalHp = rivals.reduce((sum,r)=>sum+Math.max(0,r.hp),0);
-  const rivalNeed = Math.max(0,Math.ceil((rivalHp/Math.max(1,5*state.dmgMult*10))*1.5));
+  const rivalNeed = Math.max(0,Math.ceil((rivalHp/Math.max(1,5*dmgMult()*10))*1.5));
   S('rival-status', rivals.length ? `⚠️ 他コロニーのアリ ${rivals.length}匹が侵入中` : '周囲は静かです');
   S('rival-hp', `${Math.ceil(rivalHp)} HP`); S('rival-needed', `${rivalNeed}匹`);
   const tj = toasts.map(t => t.msg).join('|');
@@ -890,9 +1039,10 @@ function updateUI() {
 // ==========================================
 function update(dt) {
   T += dt;
+  upkeepT += dt; if (upkeepT > 0.5) { upkeepT = 0; upkeep(); }
   // 女王が予約された卵を順に産む
   state.layT += dt;
-  if (state.layT >= 1.2) {
+  if (state.layT >= 1.2 / (1 + EVO.lay)) {
     const t = ['miner', 'forager', 'soldier'].find(k => state.orders[k] > 0);
     if (t) { state.orders[t]--; ants.push(new Ant(t, nestNodes[0])); state.layT = 0; }
   }
@@ -901,7 +1051,7 @@ function update(dt) {
   else { env.rainLeft -= dt; env.collapseT -= dt; if (env.collapseT <= 0) { env.collapseT = 6; collapse(); } if (env.rainLeft <= 0) { env.raining = false; env.nextRain = 70 + Math.random() * 80; } }
   // 餌の出現
   env.nextFood -= dt;
-  if (env.nextFood <= 0) { env.nextFood = (6 + Math.random() * 6) * season().sv; if (items.length < 6) spawnItem(); }
+  if (env.nextFood <= 0) { env.nextFood = (6 + Math.random() * 6) * season().sv / (1 + EVO.foodSpawn); if (items.length < 6) spawnItem(); }
   // 他コロニー
   env.nextRival -= dt;
   if (env.nextRival <= 0 && !rivals.length && T > 170 && season().n !== '冬') { spawnRivals(); env.nextRival = 100 + Math.random() * 80; }
@@ -915,15 +1065,15 @@ function update(dt) {
   rivals = rivals.filter(r => { if (r.hp <= 0) { env.rivalKills++; metrics.totalRivalKills++; return false; } return !(r.life < 0 && Math.abs(r.x) > WORLD + 60); });
   if (before && !rivals.length && env.rivalWave) {
     env.rivalWave = false;
-    if (env.rivalKills > 0) { const rw = 60 + env.rivalKills * 15; state.food += rw; notify(`🛡️ 縄張りを守った！ +${rw}🍃`); }
+    if (env.rivalKills > 0) { const rw = Math.round((60 + env.rivalKills * 15) * (1 + EVO.rivalReward)); state.food += rw; notify(`🛡️ 縄張りを守った！ +${rw}🍃`); }
   }
   items = items.filter(i => i.trips > 0);
-  const decay = 0.015 * Math.pow(0.7, state.antLevel - 1);
+  const decay = 0.015 / (1 + EVO.trail);
   for (const t of trail) t.s -= decay * dt;
   if (Math.random() < dt * 2) trail = trail.filter(t => t.s > 0);
   if (boss && boss.hp <= 0) {
-    const e = ENEMIES[state.enemyIndex]; state.food += e.reward;
-    floater(boss.x, GROUND - 30, `討伐成功! +${e.reward}🍃`); notify(`⚔️ ${e.name}を討伐！ +${e.reward.toLocaleString()}🍃`);
+    const e = ENEMIES[state.enemyIndex], rew = Math.round(e.reward * (1 + EVO.bossReward)); state.food += rew;
+    floater(boss.x, GROUND - 30, `討伐成功! +${rew}🍃`); notify(`⚔️ ${e.name}を討伐！ +${rew.toLocaleString()}🍃`);
     boss = null; state.inBattle = false; state.enemyIndex++; metrics.battlesWon++;
   }
   ants.forEach(a => a.update(dt));
@@ -1028,51 +1178,48 @@ function draw() {
       else { ctx.strokeStyle = '#5b4336'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, GROUND - sz * .6); ctx.lineTo(x - 14, GROUND - sz); ctx.moveTo(x, GROUND - sz * .7); ctx.lineTo(x + 14, GROUND - sz * .95); ctx.stroke(); }
     } else if (h % 5 === 3) { ctx.fillStyle = '#7b7773'; ell(ctx, x, GROUND - 2, 8 + h % 9, 5 + h % 4); ctx.fillStyle = 'rgba(255,255,255,.15)'; ell(ctx, x - 2, GROUND - 5, 4, 2); }
   }
-  // トンネル(縁取り → 内側)
-  ctx.lineCap = 'round'; ctx.beginPath();
-  for (let i = 1; i < nestNodes.length; i++) { const n = nestNodes[i]; if (n.parent) { ctx.moveTo(n.x, n.y); ctx.lineTo(n.parent.x, n.parent.y); } }
-  ctx.lineWidth = 21; ctx.strokeStyle = 'rgba(30,18,12,.55)'; ctx.stroke();
-  ctx.lineWidth = 16; ctx.strokeStyle = NODE_TYPES.TUNNEL.color; ctx.stroke();
-  // 部屋
+  // トンネル(蛇行する通路。太さは3段階)
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const buckets = [[], [], []];
+  for (let i = 1; i < nestNodes.length; i++) {
+    const n = nestNodes[i], pa = n.parent; if (!pa) continue;
+    if (Math.max(n.x, pa.x) < left - 40 || Math.min(n.x, pa.x) > right + 40 || Math.max(n.y, pa.y) < tp - 40 || Math.min(n.y, pa.y) > bt + 40) continue;
+    buckets[n.tw === 11 ? 0 : n.tw === 14 ? 1 : 2].push(n);
+  }
+  const tunnelPass = (extra, col) => {
+    ctx.strokeStyle = col;
+    buckets.forEach((b, bi) => {
+      ctx.lineWidth = [11, 14, 17][bi] + extra; ctx.beginPath();
+      for (const n of b) { const pa = n.parent, dx = n.x - pa.x, dy = n.y - pa.y; ctx.moveTo(pa.x, pa.y); ctx.quadraticCurveTo((n.x + pa.x) / 2 - dy * n.bend, (n.y + pa.y) / 2 + dx * n.bend, n.x, n.y); }
+      ctx.stroke();
+    });
+  };
+  tunnelPass(6, 'rgba(34,20,13,.6)'); tunnelPass(0, NODE_TYPES.TUNNEL.color);
+  // 部屋(不定形。用途ごとに床の色と目印が違う)
+  const ROOM_LIGHT = { QUEEN: '#43271a', NURSERY: '#83583a', STORAGE: '#566b46', BARRACKS: '#74443f' };
+  const blobPath = (n, g) => {
+    const K = 16, P = [];
+    for (let k = 0; k < K; k++) { const a = k / K * 6.2832, f = 0.9 + 0.2 * (hash(n.seed, k) % 100) / 100; P.push([n.x + Math.cos(a) * (n.rx + g) * f, n.y + Math.sin(a) * (n.ry + g) * f]); }
+    ctx.beginPath(); ctx.moveTo((P[K - 1][0] + P[0][0]) / 2, (P[K - 1][1] + P[0][1]) / 2);
+    for (let i = 0; i < K; i++) { const a = P[i], b = P[(i + 1) % K]; ctx.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+    ctx.closePath();
+  };
   const leaves = Math.min(6, Math.floor(Math.log10(state.food + 1) * 2));
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const n of nestNodes) {
-    if (n.type === 'ENTRANCE' || n.x + n.r < left || n.x - n.r > right || n.y + n.r < tp || n.y - n.r > bt) continue;
-    // 部屋は丸ではなく、角を少し丸めた用途別の四角形にする。
-    // n.r は既存ロジックとの互換性のため維持し、描画時だけ幅・高さを用途別に調整。
-    const roomShape = {
-      QUEEN:     { w: 2.35, h: 1.72 },
-      NURSERY:   { w: 2.55, h: 1.65 },
-      STORAGE:   { w: 2.15, h: 1.55 },
-      BARRACKS:  { w: 1.95, h: 1.5 },
-      TUNNEL:    { w: 1.25, h: 1.15 },
-      ENTRANCE:  { w: 1.45, h: 1.2 }
-    }[n.type] || { w: 1.8, h: 1.45 };
-    const rw = Math.max(34, n.r * roomShape.w);
-    const rh = Math.max(27, n.r * roomShape.h);
-    const rr = Math.min(15, rw * .16, rh * .22);
-    const roundedRoom = (x, y, w, h, r) => {
-      // 四角を基本に、辺をほんの少しだけうねらせた角丸形状。
-      // 部屋ごとに安定した差を付け、再描画のたびに形がちらつかないよう座標から決定する。
-      const seed = Math.sin(n.x * 0.071 + n.y * 0.037 + n.r) * 3.2;
-      const rr = Math.min(r, w * .22, h * .25);
-      ctx.beginPath();
-      ctx.moveTo(x + rr, y + seed);
-      ctx.quadraticCurveTo(x + w*.48, y - seed*.25, x + w - rr, y + seed*.35);
-      ctx.quadraticCurveTo(x + w + seed*.2, y + seed*.2, x + w - rr*.15, y + rr);
-      ctx.lineTo(x + w + seed*.25, y + h - rr);
-      ctx.quadraticCurveTo(x + w, y + h + seed*.3, x + w - rr, y + h - seed*.2);
-      ctx.quadraticCurveTo(x + w*.52, y + h + seed*.35, x + rr, y + h - seed*.15);
-      ctx.quadraticCurveTo(x - seed*.2, y + h, x + rr*.15, y + h - rr);
-      ctx.lineTo(x - seed*.15, y + rr);
-      ctx.quadraticCurveTo(x, y - seed*.25, x + rr, y + seed);
-      ctx.closePath();
-    };
-    const rg = ctx.createLinearGradient(n.x-rw/2, n.y-rh/2, n.x+rw/2, n.y+rh/2);
-    rg.addColorStop(0, NODE_TYPES[n.type].color); rg.addColorStop(.55, NODE_TYPES[n.type].color); rg.addColorStop(1, 'rgba(18,10,7,1)');
-    ctx.fillStyle = 'rgba(30,18,12,.62)'; roundedRoom(n.x-rw/2-3, n.y-rh/2-3, rw+6, rh+6, rr+3); ctx.fill();
-    ctx.fillStyle = rg; roundedRoom(n.x-rw/2, n.y-rh/2, rw, rh, rr); ctx.fill();
-    ctx.strokeStyle = 'rgba(210,160,112,.2)'; ctx.lineWidth = 1; roundedRoom(n.x-rw/2+3, n.y-rh/2+3, rw-6, rh-6, Math.max(3,rr-3)); ctx.stroke();
-    if (n.type === 'STORAGE') { ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; for (let i = 0; i < leaves; i++) ctx.fillText(i % 2 ? '🍂' : '🍃', n.x - rw*.3 + (i * 13) % Math.max(20,rw*.6), n.y - 3 + (i * 7) % Math.max(12,rh*.45)); }
+    if (!n.isRoom() || n.x + n.rx < left || n.x - n.rx > right || n.y + n.ry < tp || n.y - n.ry > bt) continue;
+    blobPath(n, 4); ctx.fillStyle = 'rgba(34,20,13,.65)'; ctx.fill();
+    const rg = ctx.createLinearGradient(n.x, n.y - n.ry, n.x, n.y + n.ry);
+    rg.addColorStop(0, NODE_TYPES[n.type].color); rg.addColorStop(1, ROOM_LIGHT[n.type]);
+    blobPath(n, 0); ctx.fillStyle = rg; ctx.fill();
+    ctx.strokeStyle = 'rgba(210,160,112,.18)'; ctx.lineWidth = 1; blobPath(n, -4); ctx.stroke();
+    if (n.type === 'NURSERY') { ctx.fillStyle = 'rgba(235,205,150,.3)'; for (let i = 0; i < 9; i++) { const h = hash(n.seed, i + 30); ctx.fillRect(n.x + ((h % 100) / 100 - .5) * n.rx * 1.5, n.y + (((h >>> 8) % 100) / 100 - .5) * n.ry * 1.4, 4, 1.2); } }
+    if (n.type === 'STORAGE') { ctx.font = '10px sans-serif'; for (let i = 0; i < leaves; i++) ctx.fillText(i % 2 ? '🍂' : '🍃', n.x + ((hash(n.seed, i + 60) % 100) / 100 - .5) * n.rx * 1.3, n.y + ((hash(n.seed, i + 80) % 100) / 100 - .5) * n.ry * 1.1); }
+    if (z > 0.4 && n.type !== 'QUEEN') {
+      ctx.font = '11px sans-serif'; ctx.fillStyle = 'rgba(255,240,220,.8)';
+      const cap = n.type === 'NURSERY' ? '/' + nurseryCap(n) : n.type === 'BARRACKS' ? '/' + barracksCap(n) : '';
+      ctx.fillText(ROOM_INFO[n.type].icon + (cap ? ' ' + n.use + cap : ''), n.x, n.y - n.ry * 0.62);
+    }
   }
   // 地表
   ctx.fillStyle = s.c; ctx.fillRect(left, GROUND - 4, right - left, 7);
@@ -1103,8 +1250,8 @@ function draw() {
   }
   for (const r of rivals) drawAnt(ctx, r.x, r.y, r.ang, 1, BODY.rival, r.legT, { head: true });
   // 女王
-  drawAnt(ctx, 0, 0, Math.PI / 2, 2.6 + Math.sin(T * 1.6) * 0.1, BODY.queen, 0, { big: true });
-  ctx.font = '14px sans-serif'; ctx.fillText('👑', 0, -22);
+  { const qn = nestNodes[0]; drawAnt(ctx, qn.x, qn.y, Math.PI / 2, 2.6 + Math.sin(T * 1.6) * 0.1, BODY.queen, 0, { big: true });
+  ctx.font = '14px sans-serif'; ctx.fillText('👑', qn.x, qn.y - 22); }
   // 卵・幼虫・蛹 → 成虫
   for (const a of ants) if (a.phase !== 'adult') drawBrood(ctx, a);
   for (const a of ants) {
@@ -1142,14 +1289,15 @@ function drawMini() {
 // ==========================================
 const didLoad = loadGame();
 if (!didLoad) {
-  initNest();
-  { const first = new Ant('forager', nestNodes[0]); first.x = 46; first.y = 14; first.timer = 6; ants.push(first); }
+  initNest(); state.nestSize = nestArea();
+  { const first = new Ant('forager', nestNodes[0]); first.x = nestNodes[0].x + 54; first.y = nestNodes[0].y + 16; first.timer = 6; ants.push(first); }
   metrics.foundedAt = Date.now(); metrics.peakPopulation = 1;
   notify('🥚 卵が孵るのを待ち、最初の働きアリに餌を運ばせましょう');
 } else {
   notify('💾 セーブデータを読み込みました。おかえりなさい！');
   renderAchievements();
 }
+recalcEvo(); renderEvolutions();
 let last = performance.now(), uiAcc = 0;
 function frame(now) {
   requestAnimationFrame(frame);
